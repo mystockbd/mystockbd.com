@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>সেলার সাইন আপ | MyStockBD</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root {
+  --primary: #2563eb;
+  --accent: #06b6d4;
+  --danger: #ef4444;
+  --gray: #6b7280;
+  --border: #d1d5db;
+  --radius: 16px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Noto Sans Bengali',sans-serif;
+  background: linear-gradient(135deg,#1e3a8a,#0ea5e9,#06b6d4);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:1rem;
+}
+.container{
+  max-width:500px;width:100%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius);
+  box-shadow:0 20px 45px rgba(0,0,0,0.25);
+  padding:2rem;
+  position:relative;
+}
+h2{text-align:center;color:#fff;font-size:1.8rem;margin-bottom:0.5rem;}
+p{font-size:0.9rem;color:#e5e7eb;text-align:center;margin-bottom:1rem;}
+p a{color:#facc15;text-decoration:none;font-weight:600;}
+
+.input-group{position:relative;margin-bottom:1rem;}
+.input-group input{
+  width:100%;
+  padding:0.75rem 2.5rem;
+  border:1px solid rgba(255,255,255,0.3);
+  border-radius:var(--radius);
+  font-size:0.95rem;
+  outline:none;
+  color:#fff;
+  background: rgba(255,255,255,0.1);
+  transition: all 0.3s;
+}
+.input-group input:focus{
+  border-color: #38bdf8;
+  box-shadow:0 0 0 3px rgba(56,189,248,0.3);
+}
+.toggle-eye{
+  position:absolute;
+  right:14px;top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  color:#cbd5e1;
+  font-size:1.3rem;
+  transition:color 0.2s;
+}
+.toggle-eye:hover{color:#06b6d4;}
+
+.error-msg{
+  display:none;
+  background:#fee2e2;color:var(--danger);
+  padding:0.7rem;border-radius:0.5rem;
+  margin-bottom:1rem;text-align:center;font-weight:600;
+}
+.success-msg{
+  display:none;
+  background:#d1fae5;color:#065f46;
+  padding:0.7rem;border-radius:0.5rem;
+  margin-bottom:1rem;text-align:center;font-weight:600;
+}
+
+button{
+  width:100%;
+  background: linear-gradient(135deg,var(--primary),var(--accent));
+  color:white;padding:1rem;
+  border:none;border-radius:var(--radius);
+  font-size:1rem;font-weight:600;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+button:hover{transform:translateY(-3px);}
+button.loading{cursor:not-allowed;opacity:0.75;}
+
+/* Payment Popup */
+#paymentPopup{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;align-items:center;
+  z-index:999;
+}
+#paymentForm{
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(15px);
+  border-radius:var(--radius);
+  padding:30px;
+  width:100%;
+  max-width:400px;
+  position:relative;
+  color:#fff;
+}
+#paymentForm h3{text-align:center;margin-bottom:1rem;color:#06b6d4;}
+#paymentForm select,#paymentForm input,#paymentForm button{
+  width:100%;padding:12px;margin-bottom:14px;
+  border-radius:var(--radius);border:1px solid rgba(255,255,255,0.3);
+  background:rgba(255,255,255,0.1);color:#000000;font-size:15px;
+}
+/* Placeholder color */
+#paymentForm input::placeholder {
+  color: #000000; /* কালো */
+  opacity: 1;     /* Firefox-এ placeholder স্বচ্ছতা ঠিক করতে */
+}
+
+#paymentForm select:focus,#paymentForm input:focus{outline:none;border-color:#38bdf8;box-shadow:0 0 8px rgba(56,189,248,0.3);}
+.copy-icon{display:inline-flex;width:22px;height:22px;cursor:pointer;margin-left:6px;vertical-align:middle;transition:0.2s;}
+.copy-icon:hover{transform:scale(1.2);}
+.payment-logo{height:20px;vertical-align:middle;margin-right:6px;}
+.closePopup{position:absolute;top:10px;right:12px;font-size:22px;cursor:pointer;color:#fff;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>সেলার সাইন আপ করুন</h2>
+  <p>ইতিমধ্যেই অ্যাকাউন্ট আছে? <a href="login.html">লগইন করুন</a></p>
+
+  <div class="error-msg" id="signupError"></div>
+  <div class="success-msg" id="signupSuccess"></div>
+
+  <form id="signupForm">
+    <div class="input-group"><input type="text" id="name" name="name" placeholder="আপনার নাম লিখুন" required></div>
+    <div class="input-group"><input type="email" id="email" name="email" placeholder="আপনার ইমেইল লিখুন" required></div>
+    <div class="input-group">
+      <input type="password" id="password" name="password" placeholder="পাসওয়ার্ড লিখুন" required>
+      <span class="toggle-eye material-icons-outlined" id="togglePasswordEye">visibility</span>
+    </div>
+    <div class="input-group">
+      <input type="password" id="confirmPassword" name="confirmPassword" placeholder="পাসওয়ার্ড নিশ্চিত করুন" required>
+      <span class="toggle-eye material-icons-outlined" id="toggleConfirmEye">visibility</span>
+    </div>
+    <button type="submit" id="signupBtn">সাইন আপ করুন</button>
+  </form>
+</div>
+
+<!-- Payment Popup -->
+<div id="paymentPopup">
+  <div id="paymentForm">
+    <span class="closePopup" onclick="closePayment()">&times;</span>
+    <h3>পেমেন্ট করুন</h3>
+    <div class="error-msg" id="paymentError"></div>
+    <div class="success-msg" id="paymentSuccess"></div>
+    <select id="paymentMethod">
+      <option value="">--পেমেন্ট মাধ্যম নির্বাচন করুন--</option>
+      <option value="bkash">Bkash</option>
+      <option value="nogod">Nogod</option>
+      <option value="trial">Free Trial</option>
+    </select>
+    <div id="paymentInstructions"></div>
+    <input type="text" id="txnId" placeholder="TXN নম্বর লিখুন">
+    <input type="text" id="senderNumber" placeholder="যে নাম্বার থেকে পেমেন্ট পাঠিয়েছেন" />
+    <button type="button" onclick="confirmPayment()">Confirm Payment</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// DOM elements
+const signupForm = document.getElementById('signupForm');
+const signupError = document.getElementById('signupError');
+const signupSuccess = document.getElementById('signupSuccess');
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const togglePasswordEye = document.getElementById('togglePasswordEye');
+const toggleConfirmEye = document.getElementById('toggleConfirmEye');
+
+const paymentPopup = document.getElementById('paymentPopup');
+const paymentMethod = document.getElementById('paymentMethod');
+const paymentInstructions = document.getElementById('paymentInstructions');
+const txnInput = document.getElementById('txnId');
+const senderNumberInput = document.getElementById('senderNumber');
+const paymentError = document.getElementById('paymentError');
+const paymentSuccess = document.getElementById('paymentSuccess');
+
+let signupData = {};
+
+// Password toggle
+togglePasswordEye.addEventListener('click', ()=>{
+  passwordInput.type = passwordInput.type==='password'?'text':'password';
+  togglePasswordEye.textContent = passwordInput.type==='password'?'visibility':'visibility_off';
+});
+toggleConfirmEye.addEventListener('click', ()=>{
+  confirmPasswordInput.type = confirmPasswordInput.type==='password'?'text':'password';
+  toggleConfirmEye.textContent = confirmPasswordInput.type==='password'?'visibility':'visibility_off';
+});
+
+// Signup submit
+signupForm.addEventListener('submit', e=>{
+  e.preventDefault(); 
+  signupError.style.display='none'; 
+  signupSuccess.style.display='none';
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
+  if(password !== confirmPassword){
+    signupError.style.display='block';
+    signupError.textContent="পাসওয়ার্ড মিলছে না!";
+    return;
+  }
+  signupData = {name,email,password};
+  paymentPopup.style.display='flex';
+});
+
+// Payment instructions
+paymentMethod.addEventListener('change', () => {
+  const method = paymentMethod.value; 
+  const number = '01871379179';
+
+  if(method === 'bkash'){
+  paymentInstructions.innerHTML = `
+    <b>Bkash Payment Instructions:</b><br><br>
+    ১. আপনার মোবাইল থেকে <b>Bkash</b> অ্যাপ বা ডায়াল (*247#) ওপেন করুন।<br>
+    ২. "Send Money" অপশন সিলেক্ট করুন।<br>
+    ৩. প্রাপক নম্বর হিসেবে 
+       <span style="display:inline-flex; align-items:center;">
+         <b id="paymentNumber">${number}</b>
+         <img src="https://img.icons8.com/material-outlined/24/000000/copy.png" 
+              class="copy-icon" id="copyNumberBtn" title="Copy Number"/>
+       </span> এ টাকা পাঠান<br>
+    ৪. Amount হিসেবে <b>300৳</b> দিন।<br>
+    ৫. Payment করার পরে Transaction ID বা রসিদ নোট করুন।<br>
+    ৬. নিচের ফিল্ডে Transaction ID এবং আপনি যে নাম্বার থেকে টাকা পাঠিয়েছেন সেই Bkash নম্বর ইনপুট করুন।<br><br>
+    ✅ Payment নিশ্চিত হওয়ার পরে পেমেন্ট যাচাই এর পর আপনার একাউন্টটি একটিভ করা হবে।`;
+    txnInput.style.display = 'block'; 
+  senderNumberInput.style.display = 'block';
+}
+
+else if(method === 'nogod'){
+  paymentInstructions.innerHTML = `
+    <b>Nagad Payment Instructions:</b><br><br>
+    ১. আপনার মোবাইল থেকে <b>Nagad</b> অ্যাপ বা ডায়াল (*167#) ওপেন করুন।<br>
+    ২. "Send Money" অপশন সিলেক্ট করুন।<br>
+    ৩. প্রাপক নম্বর হিসেবে 
+       <span style="display:inline-flex; align-items:center;">
+         <b id="paymentNumber">${number}</b>
+         <img src="https://img.icons8.com/material-outlined/24/000000/copy.png" 
+              class="copy-icon" id="copyNumberBtn" title="Copy Number"/>
+       </span> এ টাকা পাঠান<br>
+    ৪. Amount হিসেবে <b>300৳</b> দিন।<br>
+    ৫. Payment করার পরে Transaction ID বা রসিদ নোট করুন।<br>
+    ৬. নিচের ফিল্ডে Transaction ID এবং আপনি যে নাম্বার থেকে টাকা পাঠিয়েছেন সেই Nogod নম্বর ইনপুট করুন।<br><br>
+    ✅ Payment নিশ্চিত হওয়ার পরে পেমেন্ট যাচাই এর পর আপনার একাউন্টটি একটিভ করা হবে।`;
+
+  txnInput.style.display = 'block'; 
+  senderNumberInput.style.display = 'block';
+}
+ 
+else if(method === 'trial'){
+    paymentInstructions.innerHTML = `
+      <b>Free Trial:</b><br><br>
+      ৩ দিনের জন্য আপনার একাউন্ট একটিভ করা হবে।<br>
+      কোন পেমেন্ট দরকার নেই।<br>
+      Trial সময়ের মধ্যে সার্ভিসটি ব্যবহার করুন।`;
+    
+    txnInput.style.display = 'none'; 
+    senderNumberInput.style.display = 'none';
+}
+ 
+  else {
+    paymentInstructions.innerHTML=''; 
+    txnInput.style.display='block'; 
+    senderNumberInput.style.display='block';
+  }
+
+  // Add copy functionality
+  setTimeout(() => {
+    const copyBtn = document.getElementById('copyNumberBtn');
+    if(copyBtn){
+      copyBtn.addEventListener('click', () => {
+        const numberText = document.getElementById('paymentNumber').textContent;
+        navigator.clipboard.writeText(numberText)
+          .then(() => { alert("Number copied!"); })
+          .catch(err => { console.error("Failed to copy: ", err); });
+      });
+    }
+  }, 50);
+});
+
+function closePayment() {
+  paymentPopup.style.display='none';
+}
+
+
+// Confirm Payment
+async function confirmPayment(){
+  const method = paymentMethod.value;
+  const txn = txnInput.value.trim();
+  const senderNumber = senderNumberInput.value.trim();
+  const officeNumber = '01871379179';
+
+  paymentError.style.display='none'; 
+  paymentSuccess.style.display='none';
+
+  if(!method){ 
+    paymentError.style.display='block'; 
+    paymentError.textContent="পেমেন্ট মাধ্যম নির্বাচন করুন"; 
+    return;
+  }
+
+  // শুধুমাত্র Bkash/Nagad হলে ভ্যালিডেশন হবে
+  if(method === 'bkash' || method === 'nogod'){
+    // Sender Number Validation
+    const numberRegex = /^01[0-9]{9}$/; // 01 দিয়ে শুরু এবং মোট 11 digit
+    if(!numberRegex.test(senderNumber)){
+      paymentError.style.display='block';
+      paymentError.textContent="সঠিক মোবাইল নাম্বার দিন (01 দিয়ে শুরু এবং ১১ সংখ্যার হতে হবে)";
+      return;
+    }
+
+    // Txn ID Validation
+    if(txn.length !== 10){
+      paymentError.style.display='block';
+      paymentError.textContent="TXN আইডি অবশ্যই ১০ অক্ষরের হতে হবে।";
+      return;
+    }
+  }
+
+  try{
+    const userCredential = await auth.createUserWithEmailAndPassword(signupData.email, signupData.password);
+    const uid = userCredential.user.uid; 
+    const storeId = "store_" + uid;
+
+    const expiryDate = method === 'trial' 
+      ? new Date(Date.now() + 30 * 1000) 
+      : null;
+
+    await db.collection('sellers').doc(uid).set({
+      name: signupData.name,
+      email: signupData.email,
+      number: officeNumber,
+      senderNumber: senderNumber || 'NA',
+      method: method,
+      txn: txn || 'NA',
+      status: "pending",
+      storeId: storeId,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      ...(expiryDate && { expiryDate: expiryDate })
+    });
+
+    paymentSuccess.style.display='block'; 
+    paymentSuccess.textContent = method==='trial' 
+      ? '✅ আপনার রিকোয়েস্ট পাঠানো হয়েছে। যাচাইয়ের পর সক্রিয় হবে।' 
+      : '✅ আপনার রিকোয়েস্ট পাঠানো হয়েছে। যাচাইয়ের পর সক্রিয় হবে।';
+
+    signupForm.reset(); 
+    paymentMethod.value=''; 
+    paymentInstructions.innerHTML=''; 
+    txnInput.value=''; senderNumberInput.value='';
+    
+    setTimeout(()=>{window.location.href='profile.html';},2500);
+
+  } catch(error){
+    paymentError.style.display = 'block';
+
+    if (error.code === 'auth/email-already-in-use') {
+      paymentError.textContent = "এই ইমেইলটি আগে থেকেই ব্যবহার করা হচ্ছে। অন্য ইমেইল দিয়ে চেষ্টা করুন।";
+    } 
+    else if (error.code === 'auth/invalid-email') {
+      paymentError.textContent = "আপনার ইমেইল ঠিকানাটি সঠিক নয়। সঠিক ইমেইল দিন।";
+    } 
+    else if (error.code === 'auth/weak-password') {
+      paymentError.textContent = "পাসওয়ার্ডটি খুবই ছোট বা দুর্বল। অন্তত ৬ অক্ষরের শক্ত পাসওয়ার্ড দিন।";
+    } 
+    else if (error.code === 'auth/network-request-failed') {
+      paymentError.textContent = "সংযোগে সমস্যা হয়েছে। অনুগ্রহ করে ইন্টারনেট চেক করে আবার চেষ্টা করুন।";
+    } 
+    else {
+      paymentError.textContent = "দুঃখিত, কিছু একটা ভুল হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।";
+    }
+
+    console.error(error);
+  }
+}
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Details</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root{
+  --primary:#ff0000;
+  --bg:#f4f4f4;
+  --card:#fff;
+  --text:#333;
+  --muted:#777;
+  --radius:12px;
+  --shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+/* Reset */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+
+  /* 🔹 সব element select/copy বন্ধ */
+  -webkit-user-select: none;  
+  -moz-user-select: none;     
+  -ms-user-select: none;      
+  user-select: none;          
+  -webkit-touch-callout: none; 
+}
+
+/* 🔹 শুধু input আর textarea-তে select allow থাকবে */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;}
+header{position:relative;padding:20px;background:var(--primary);color:#fff;display:flex;align-items:center;gap:10px;}
+header .back-btn{cursor:pointer;font-size:24px;}
+header .logo h1{font-size:20px;flex:1;}
+.image-section{flex:1 0 50%;position:relative;width:100%;margin-top:10px;}
+.image-section img{width:100%;height:300px;object-fit:cover;border-radius:12px;cursor:pointer;}
+.favorite-icon{position:absolute;top:10px;right:10px;font-size:28px;color:white;cursor:pointer;transition:0.2s;}
+.favorite-icon.favorited{color:red;}
+.thumbnails{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.thumbnails img{width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #ddd;cursor:pointer;transition:0.2s;}
+.thumbnails img:hover{border-color:var(--primary);}
+.info{flex:1 0 50%;padding:20px;background:var(--card);display:flex;flex-direction:column;overflow-y:auto;margin-top:10px;}
+.info p{margin:6px 0;font-size:16px;}
+.info p strong{width:100px;display:inline-block;}
+.buttons{display:flex;justify-content:space-between;margin:15px 0;gap:10px;}
+button{flex:1;padding:12px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;}
+.add-cart{background:#ff9900;color:#fff;}
+.buy-now{background:#ff3f6c;color:#fff;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 6px rgba(0,0,0,0.05);z-index:10;}
+.bottom-nav div{text-align:center;font-size:12px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;}
+.bottom-nav .active{color:var(--primary);font-weight:600;}
+.material-icons-outlined{font-size:24px;display:block;}
+
+/* Quantity Selector */
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 15px 0;
+  background: #f8f8f8;
+  padding: 6px 10px;
+  border-radius: 12px;
+  width: fit-content;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.quantity-selector button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quantity-selector button:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+#qtyValue {
+  min-width: 32px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text);
+}
+
+/* Lightbox */
+#lightbox {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.9);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+#lightbox img {
+  max-width:90%;
+  max-height:90%;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.5);
+}
+#lightboxClose {
+  position:absolute;
+  top:20px; right:20px;
+  font-size:36px;
+  color:#fff;
+  cursor:pointer;
+}
+@media(max-width:600px){.thumbnails img{width:50px;height:50px;}button{padding:10px;font-size:14px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="material-icons-outlined back-btn" onclick="goBack()">arrow_back</span>
+  <div class="logo"><h1>Product Details</h1></div>
+</header>
+
+<div class="image-section">
+  <img id="mainImage" src="" alt="Product Image">
+  <span class="material-icons-outlined favorite-icon" id="favoriteIcon">favorite_border</span>
+  <div class="thumbnails" id="thumbnails"></div>
+</div>
+
+<div class="info">
+  <p><strong>Product Name:</strong> <span id="productName"></span></p>
+  <p><strong>Description:</strong> <span id="productDescription"></span></p>
+  <p><strong>Price:</strong> <span id="productPrice"></span> 
+     <span id="totalPrice">(৳0)</span>
+  </p>
+  <p><strong>Delivery:</strong> <span id="productDelivery"></span></p>
+  <p><strong>Category:</strong> <span id="productCategory"></span></p>
+
+  <!-- Quantity Selector -->
+  <div class="quantity-selector">
+    <button id="decreaseQty">-</button>
+    <span id="qtyValue">1</span>
+    <button id="increaseQty">+</button>
+  </div>
+
+  <div class="buttons">
+    <button class="add-cart">ADD TO CART</button>
+    <button class="buy-now">BUY NOW</button>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <span id="lightboxClose" class="material-icons-outlined">close</span>
+  <img id="lightboxImg" src="">
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div data-page="index.html"><span class="material-icons-outlined">home</span>Home</div>
+  <div data-page="favourite.html"><span class="material-icons-outlined">favorite</span>Favourites</div>
+  <div data-page="cart.html"><span class="material-icons-outlined">shopping_cart</span>Cart</div>
+  <div data-page="buyer-profile.html"><span class="material-icons-outlined">person</span>Profile</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+  measurementId: "G-X85X54F9CK"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Get selected product
+const selected = JSON.parse(localStorage.getItem('selectedProduct'));
+if(!selected){ alert('No product selected!'); window.location.href='index.html'; }
+const { storeId, productId } = selected;
+const favoriteIcon = document.getElementById('favoriteIcon');
+const thumbnailsDiv = document.getElementById('thumbnails');
+
+// Store storeId in localStorage for nav
+localStorage.setItem('currentStoreId', storeId);
+
+// Quantity logic
+let qty = 1;
+const qtyValue = document.getElementById('qtyValue');
+document.getElementById('increaseQty').addEventListener('click', () => {
+  qty++;
+  qtyValue.textContent = qty;
+  updateTotalPrice();
+});
+document.getElementById('decreaseQty').addEventListener('click', () => {
+  if(qty > 1) qty--;
+  qtyValue.textContent = qty;
+  updateTotalPrice();
+});
+
+// Total Price Elements
+const productPriceElem = document.getElementById('productPrice');
+const totalPriceElem = document.getElementById('totalPrice');
+let selectedProductPrice = 0;
+
+// Function to update total price
+function updateTotalPrice() {
+  const total = selectedProductPrice * qty;
+  totalPriceElem.textContent = `(৳${total})`;
+}
+
+// Lightbox
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+const mainImage = document.getElementById('mainImage');
+
+mainImage.addEventListener('click', () => {
+  lightboxImg.src = mainImage.src;
+  lightbox.style.display = 'flex';
+});
+lightboxClose.addEventListener('click', () => {
+  lightbox.style.display = 'none';
+});
+
+// Load product data and images
+auth.onAuthStateChanged(async user=>{
+  const docRef = db.collection('stores').doc(storeId).collection('products').doc(productId);
+  const docSnap = await docRef.get();
+  if(!docSnap.exists) return;
+  const product = docSnap.data();
+
+  document.getElementById('productName').textContent = product.title || '';
+  document.getElementById('productDescription').textContent = product.description || '';
+  productPriceElem.textContent = '৳'+(product.price||0);
+  selectedProductPrice = product.price || 0;
+  updateTotalPrice();
+  document.getElementById('productDelivery').textContent = product.deliveryCharge || 'N/A';
+  document.getElementById('productCategory').textContent = product.category || '';
+
+  // Load images
+  function loadImages(product){
+    document.getElementById('mainImage').src = product.mainImage;
+    thumbnailsDiv.innerHTML = '';
+    const images = [product.mainImage, ...(product.otherImages || [])];
+    images.forEach(src => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.addEventListener('click', ()=> document.getElementById('mainImage').src = src);
+      thumbnailsDiv.appendChild(img);
+    });
+  }
+  loadImages(product);
+
+  // Favorite check
+  if(user){
+    const favRef = db.collection('users').doc(user.uid).collection('favorites').doc(productId);
+    const favDoc = await favRef.get();
+    let isFav = favDoc.exists;
+    updateFavoriteIcon();
+
+    favoriteIcon.addEventListener('click', async e=>{
+      e.stopPropagation();
+      if(isFav){
+        await favRef.delete();
+        isFav = false;
+      } else {
+        await favRef.set(product);
+        isFav = true;
+      }
+      updateFavoriteIcon();
+    });
+
+    function updateFavoriteIcon(){
+      favoriteIcon.textContent = isFav ? 'favorite' : 'favorite_border';
+      favoriteIcon.classList.toggle('favorited', isFav);
+    }
+  }
+});
+
+// Add to Cart
+document.querySelector('.add-cart').addEventListener('click', async () => {
+  const user = auth.currentUser;
+  if(!user){
+    alert('আগে লগইন করুন!');
+    setTimeout(() => { window.location.href = `buyer-login.html?storeId=${storeId}`; }, 2000);
+    return;
+  }
+  const cartRef = db.collection('users').doc(user.uid).collection('cart').doc(productId);
+  const cartDoc = await cartRef.get();
+
+  if(cartDoc.exists){
+  alert('আপনার কার্টে এই প্রোডাক্টটি আগেই আছে!');
+} else {
+  await cartRef.set({
+    id: productId,
+    storeId: storeId,
+    name: selected.title,
+    price: selected.price,
+    qty: qty,
+    mainImage: selected.mainImage
+  });
+  alert('প্রোডাক্ট কার্টে যোগ করা হয়েছে!');
+}
+
+});
+
+// Buy Now
+document.querySelector('.buy-now').addEventListener('click', ()=>{
+  const user = auth.currentUser;
+  if(!user){
+    alert('আগে লগইন করুন!');
+    setTimeout(() => { window.location.href = `buyer-login.html?storeId=${storeId}`; }, 2000);
+    return;
+  }
+  const url = storeId ? `buy.html?storeId=${storeId}` : 'buy.html';
+  window.location.href = url;
+});
+
+// Navigation
+function goBack(){ window.history.back(); }
+
+// Bottom nav
+const bottomNav = document.getElementById('bottomNav');
+const currentStoreId = localStorage.getItem('currentStoreId');
+bottomNav.querySelectorAll('div').forEach(nav=>{
+  const page = nav.dataset.page;
+  nav.addEventListener('click', ()=> {
+    const url = currentStoreId ? `${page}?storeId=${currentStoreId}` : page;
+    window.location.href = url;
+  });
+});
+
+// Highlight active nav
+const currentPage = window.location.pathname.split('/').pop();
+bottomNav.querySelectorAll('div').forEach(nav=>{
+  if(currentPage === 'product.html'){
+    if(nav.dataset.page === 'index.html') nav.classList.add('active');
+  } else {
+    if(nav.dataset.page === currentPage) nav.classList.add('active');
+  }
+});
+</script>
+</body>
+</html>

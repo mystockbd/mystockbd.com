@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>পণ্য আপলোড | MyStockBD</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root {
+  --primary: #e65100;
+  --primary-light: #ff9800;
+  --bg: #f5f6f8;
+  --card: #fff;
+  --text: #1a1a1a;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+/* Reset */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+
+  /* 🔹 সব element select/copy বন্ধ */
+  -webkit-user-select: none;  
+  -moz-user-select: none;     
+  -ms-user-select: none;      
+  user-select: none;          
+  -webkit-touch-callout: none; 
+}
+
+/* 🔹 শুধু input আর textarea-তে select allow থাকবে */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;}
+.topbar{background:var(--card);box-shadow:var(--shadow);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;}
+.brand{font-size:18px;font-weight:600;color:var(--primary);}
+.icon-btn{cursor:pointer;color:var(--primary);}
+h2{text-align:center;margin-bottom:20px;color:var(--primary);}
+form{background:var(--card);padding:20px;border-radius:var(--radius);box-shadow:var(--shadow);}
+label{font-weight:500;margin-bottom:4px;display:block;}
+input, textarea, select{padding:12px;width:100%;margin-bottom:16px;border:1px solid #ccc;border-radius:var(--radius);font-size:14px;}
+input:focus, textarea:focus, select:focus{border-color:var(--primary);outline:none;}
+textarea{resize:vertical;}
+.btn{display:inline-block;padding:12px 24px;border:none;border-radius:var(--radius);cursor:pointer;font-weight:600;color:#fff;text-align:center;}
+.btn-primary{background:linear-gradient(90deg,var(--primary-light),var(--primary));}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-secondary{background:#4caf50;margin-bottom:20px;}
+.btn-secondary:hover{opacity:0.9;}
+#imageContainer .image-field{display:flex; gap:10px; margin-bottom:10px;}
+#imageContainer .image-field input{flex:1;}
+.image-preview{display:flex; gap:10px; margin-bottom:16px;}
+.image-preview img{width:80px; height:80px; object-fit:cover; border-radius:var(--radius); border:1px solid #ccc;}
+small{display:block;margin-top:-10px;margin-bottom:10px;color:red;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;}
+.bottom-nav div{text-align:center;font-size:12px;color:#666;cursor:pointer;}
+.bottom-nav .active{color:var(--primary);font-weight:600;}
+.material-icons-outlined{font-size:20px;display:block;}
+</style>
+</head>
+<body>
+
+<!-- Topbar with Back Arrow -->
+<div class="topbar">
+  <div class="topbar-left" style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+    <span class="material-icons-outlined">arrow_back</span>
+    <span class="brand">MyStockBD</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="material-icons-outlined icon-btn">logout</span>
+  </div>
+</div>
+
+<h2>নতুন পণ্য যোগ করুন</h2>
+
+<form id="productForm">
+  <label>পণ্যের নাম:</label>
+  <input type="text" id="title" placeholder="পণ্যের নাম লিখুন" required>
+  <p id="titleCounter" style="font-size:12px;color:var(--primary);margin-top:-10px;margin-bottom:10px;">0/60</p>
+
+  <label>বিবরণ:</label>
+  <textarea id="description" placeholder="পণ্যের বিবরণ লিখুন" rows="4" required></textarea>
+  <p id="descCounter" style="font-size:12px;color:var(--primary);margin-top:-10px;margin-bottom:10px;">0/100</p>
+
+  <label>মূল্য:</label>
+  <input type="number" id="price" placeholder="মূল্য লিখুন" required>
+
+  <label>ক্যাটাগরি:</label>
+  <select id="category" required>
+    <option value="">-- নির্বাচন করুন --</option>
+    <option value="electronics">ইলেকট্রনিকস</option>
+    <option value="fashion">ফ্যাশন</option>
+    <option value="home_kitchen">হোম & কিচেন</option>
+    <option value="beauty_personal_care">বিউটি & পার্সোনাল কেয়ার</option>
+    <option value="books_stationery">বই & স্টেশনারি</option>
+    <option value="sports_outdoors">স্পোর্টস & আউটডোরস</option>
+    <option value="toys_baby">টয়স & বেবি প্রোডাক্ট</option>
+    <option value="automotive_tools">অটোমোটিভ & টুলস</option>
+    <option value="grocery_food">গ্রোসারি & ফুড</option>
+    <option value="misc_others">অন্যান্য</option>
+  </select>
+
+  <label>Delivery Charge / Shipping Info:</label>
+  <textarea id="deliveryCharge" placeholder="যেমন: ঢাকার মধ্যে 100৳, ঢাকা বাইরে 200৳" rows="2" required></textarea>
+
+  <label>ছবি আপলোড (PostImages ব্যবহার করুন):</label>
+  <button type="button" id="openPostImage" class="btn btn-secondary">ছবি আপলোড করুন</button>
+  <small>📌 সর্বাধিক ৩টি Image URL দিতে পারবেন।</small>
+
+  <div class="image-preview" id="imagePreview"></div>
+
+  <div id="imageContainer">
+    <div class="image-field">
+      <input type="url" class="imageUrl" placeholder="Image URL 1" required>
+    </div>
+  </div>
+  <button type="button" id="addImageBtn" class="btn btn-secondary">+ আরও ছবি যোগ করুন</button>
+
+  <button type="submit" class="btn btn-primary">আপলোড করুন</button>
+</form>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+  <div class="nav-profile"><span class="material-icons-outlined">person</span>Profile</div>
+  <div class="nav-products"><span class="material-icons-outlined">inventory_2</span>Products</div>
+  <div class="nav-orders"><span class="material-icons-outlined">shopping_bag</span>Orders</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, setDoc } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+  measurementId: "G-X85X54F9CK"
+};
+
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+const auth = getAuth(app);
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  // Highlight Products tab
+  document.querySelector(".nav-products").classList.add("active");
+
+  let currentUser = null;
+
+  // Login check
+  onAuthStateChanged(auth, async (user) => {
+    if(!user){
+      alert("আপনি লগইন করেননি!");
+      window.location.href = "login.html";
+      return;
+    }
+    currentUser = user;
+  });
+
+  // Topbar Back arrow
+  const topbarLeft = document.querySelector(".topbar-left");
+  if(topbarLeft){
+    topbarLeft.addEventListener("click", () => {
+      window.location.href = "profile.html";
+    });
+  }
+
+  // Logout
+  const logoutBtn = document.querySelector(".icon-btn:last-child");
+  if(logoutBtn){
+    logoutBtn.addEventListener("click", () => {
+      signOut(auth)
+        .then(()=>window.location.href='login.html')
+        .catch(err=>alert("Logout error: "+err.message));
+    });
+  }
+
+  // Bottom nav
+  const navProfile = document.querySelector(".nav-profile");
+  const navProducts = document.querySelector(".nav-products");
+  const navOrders = document.querySelector(".nav-orders");
+  if(navProfile) navProfile.addEventListener("click", ()=> window.location.href="profile.html");
+  if(navProducts) navProducts.addEventListener("click", ()=> window.location.href="my-product.html");
+  if(navOrders) navOrders.addEventListener("click", ()=> window.location.href="orders.html");
+
+  // PostImages helper
+  const openPostImage = document.getElementById("openPostImage");
+  if(openPostImage){
+    openPostImage.addEventListener("click", function() {
+      alert("📌 ছবি PostImages এ আপলোড করুন এবং Direct Link copy করুন।");
+      window.open("https://postimages.org/", "_blank");
+    });
+  }
+
+  // Add more image input
+  const addImageBtn = document.getElementById("addImageBtn");
+  const imageContainer = document.getElementById("imageContainer");
+  const imagePreview = document.getElementById("imagePreview");
+  let imageCount = 1;
+
+  function updatePreview(){
+    imagePreview.innerHTML = "";
+    const urls = document.querySelectorAll(".imageUrl");
+    urls.forEach(urlInput=>{
+      if(urlInput.value.trim()){
+        const img = document.createElement("img");
+        img.src = urlInput.value.trim();
+        imagePreview.appendChild(img);
+      }
+    });
+  }
+
+  if(addImageBtn && imageContainer){
+    addImageBtn.addEventListener("click", () => {
+      if(imageCount >= 3){
+        alert("⚠️ সর্বাধিক ৩টি ছবি দিতে পারবেন!");
+        return;
+      }
+      imageCount++;
+      const div = document.createElement("div");
+      div.className = "image-field";
+      div.innerHTML = `<input type="url" class="imageUrl" placeholder="Image URL ${imageCount}" required>`;
+      imageContainer.appendChild(div);
+      div.querySelector("input").addEventListener("input", updatePreview);
+    });
+  }
+
+  const firstImageInput = document.querySelector(".imageUrl");
+  if(firstImageInput) firstImageInput.addEventListener("input", updatePreview);
+
+  // Character counters
+  const titleInput = document.getElementById("title");
+  const descInput = document.getElementById("description");
+  const titleCounter = document.getElementById("titleCounter");
+  const descCounter = document.getElementById("descCounter");
+
+  titleInput.addEventListener("input", () => {
+    if(titleInput.value.length > 60) titleInput.value = titleInput.value.substring(0,60);
+    titleCounter.textContent = `${titleInput.value.length}/60`;
+  });
+
+  descInput.addEventListener("input", () => {
+    if(descInput.value.length > 100) descInput.value = descInput.value.substring(0,100);
+    descCounter.textContent = `${descInput.value.length}/100`;
+  });
+
+  // Form submit
+  const form = document.getElementById("productForm");
+  if(form){
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if(!currentUser){ alert("আপনি লগইন করেননি!"); return; }
+
+      const title = titleInput.value.trim();
+      const description = descInput.value.trim();
+      const price = parseFloat(document.getElementById("price").value);
+      if(price <= 0){ alert("মূল্য 0-এর চেয়ে বড় হতে হবে!"); return; }
+      const category = document.getElementById("category").value;
+      const deliveryCharge = document.getElementById("deliveryCharge").value.trim();
+      const sellerId = currentUser.uid;
+
+      const imageInputs = document.querySelectorAll(".imageUrl");
+      const imageUrls = Array.from(imageInputs)
+        .map(input => input.value.trim())
+        .filter(url => url);
+
+      if(imageUrls.length === 0 || imageUrls.length > 3){
+        alert("⚠️ ১–৩টির মধ্যে ছবি দিতে হবে!");
+        return;
+      }
+
+      const mainImage = imageUrls[0];
+      const otherImages = imageUrls.slice(1);
+
+      try {
+        const sellerDoc = await getDoc(doc(firestore, "sellers", sellerId));
+        if(!sellerDoc.exists()){
+          alert("Seller information পাওয়া যায়নি!");
+          return;
+        }
+        const storeId = sellerDoc.data().storeId;
+        if(!storeId){
+          alert("Seller-এর Store ID পাওয়া যায়নি!");
+          return;
+        }
+
+        const productRef = doc(collection(firestore, `stores/${storeId}/products`));
+        await setDoc(productRef, {
+          productId: productRef.id,
+          title,
+          description,
+          price,
+          mainImage,
+          otherImages,
+          category,
+          deliveryCharge,
+          sellerId,
+          storeId,
+          status: "active",
+          timestamp: Date.now()
+        });
+
+        alert("✅ পণ্য সফলভাবে যোগ হয়েছে!");
+        window.location.href = "my-product.html";
+
+      } catch (error) {
+        console.error("Firestore error:", error);
+        alert("❌ সমস্যা হয়েছে: " + error.message);
+      }
+    });
+  }
+
+});
+</script>
+
+</body>
+</html>

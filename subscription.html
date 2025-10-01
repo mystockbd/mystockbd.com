@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Payment — MyStockBD</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+body{font-family:'Poppins',sans-serif;background:#f5f6f8;padding:20px;padding-bottom:80px;} /* extra bottom padding for nav */
+.container{max-width:500px;margin:auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.back-arrow{cursor:pointer; display:flex; align-items:center; gap:6px; margin-bottom:15px; color:#e65100; font-weight:500;}
+.back-arrow span.material-icons-outlined{font-size:24px;}
+h2{text-align:center;color:#e65100;margin-bottom:20px;}
+input, select{width:100%;padding:10px;margin-bottom:12px;border:1px solid #ccc;border-radius:8px;font-size:0.95rem;}
+button{padding:10px 15px;border:none;border-radius:8px;background:#e65100;color:#fff;font-weight:600;cursor:pointer;width:100%;}
+button:hover{background:#ff9800;}
+.error-msg{color:red;margin-bottom:10px;text-align:center;}
+.success-msg{color:green;margin-bottom:10px;text-align:center;}
+.payment-logo{width:24px;height:24px;vertical-align:middle;margin-right:6px;}
+.copy-icon{cursor:pointer;color:#e65100;vertical-align:middle;}
+
+/* Bottom Navigation */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 6px rgba(0,0,0,0.1);}
+.bottom-nav div{text-align:center;font-size:12px;color:#666;cursor:pointer;display:flex;flex-direction:column;align-items:center;}
+.bottom-nav .material-icons-outlined{font-size:20px;margin-bottom:2px;}
+.bottom-nav .active{color:#e65100;font-weight:600;}
+.bottom-nav .active .material-icons-outlined{color:#e65100;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Back Arrow -->
+  <div class="back-arrow" onclick="goBack()">
+    <span class="material-icons-outlined">arrow_back</span>
+    <span>Back</span>
+  </div>
+
+  <h2>Premium Payment</h2>
+
+  <div class="error-msg" id="paymentError" style="display:none;"></div>
+  <div class="success-msg" id="paymentSuccess" style="display:none;"></div>
+
+  <label for="paymentMethod">Payment Method</label>
+  <select id="paymentMethod">
+    <option value="">-- পেমেন্ট মাধ্যম নির্বাচন করুন --</option>
+    <option value="bkash">Bkash</option>
+    <option value="nogod">Nogod</option>
+  </select>
+
+  <div id="paymentInstructions"></div>
+
+  <label for="senderNumber">আপনার নম্বর (যা থেকে টাকা পাঠানো হয়েছে)</label>
+  <input type="text" id="senderNumber" placeholder="018XXXXXXXX" />
+
+  <label for="txnInput">TXN Number</label>
+  <input type="text" id="txnInput" placeholder="TXN Number লিখুন" />
+
+  <button id="confirmPaymentBtn">Submit Payment</button>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+  <div class="nav-profile"><span class="material-icons-outlined">person</span>Profile</div>
+  <div class="nav-products"><span class="material-icons-outlined">inventory_2</span>Products</div>
+  <div class="nav-orders"><span class="material-icons-outlined">shopping_bag</span>Orders</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey:"AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain:"mystockbd-2562f.firebaseapp.com",
+  projectId:"mystockbd-2562f",
+  storageBucket:"mystockbd-2562f.appspot.com",
+  messagingSenderId:"502104908886",
+  appId:"1:502104908886:web:ec887afe724c0f1a2f87f7"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Elements
+const paymentMethod = document.getElementById('paymentMethod');
+const paymentInstructions = document.getElementById('paymentInstructions');
+const senderNumberInput = document.getElementById('senderNumber');
+const txnInput = document.getElementById('txnInput');
+const paymentError = document.getElementById('paymentError');
+const paymentSuccess = document.getElementById('paymentSuccess');
+const confirmBtn = document.getElementById('confirmPaymentBtn');
+
+const officeNumber = '01871379179';
+
+// Payment instructions update
+paymentMethod.addEventListener('change', ()=>{
+  const method = paymentMethod.value;
+  if(method==='bkash'){
+    paymentInstructions.innerHTML = `
+      <b><img src="https://www.logo.wine/a/logo/BKash/BKash-Icon2-Logo.wine.svg" class="payment-logo">Bkash:</b><br>
+      1. Bkash অ্যাপ খুলুন<br>
+      2. Send Money নির্বাচন করুন<br>
+      3. নম্বরে পাঠান: <b id="paymentNumber">${officeNumber}</b> <span class="material-icons-outlined copy-icon" onclick="copyNumber('${officeNumber}')">content_copy</span><br>
+      4. Amount: <b>300৳</b><br>
+      5. TXN Number নিচে দিন
+    `;
+  } else if(method==='nogod'){
+    paymentInstructions.innerHTML = `
+      <b><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTO-wFXYbo8J6VfSKSeg-kInWFhl6--1r7A5oMW3lCJrWD34V5ZwXTRLi_t1cBWNOg4NcQ&usqp=CAU" class="payment-logo">Nogod:</b><br>
+      1. Nogod অ্যাপ খুলুন<br>
+      2. Send Money নির্বাচন করুন<br>
+      3. নম্বরে পাঠান: <b id="paymentNumber">${officeNumber}</b> <span class="material-icons-outlined copy-icon" onclick="copyNumber('${officeNumber}')">content_copy</span><br>
+      4. Amount: <b>300৳</b><br>
+      5. TXN Number নিচে দিন
+    `;
+  } else { paymentInstructions.innerHTML=''; }
+});
+
+// Copy number
+function copyNumber(number){ navigator.clipboard.writeText(number).then(()=>{ alert("নম্বর কপি হয়েছে: "+number); }); }
+
+// Confirm Payment
+confirmBtn.addEventListener('click', async ()=>{
+  paymentError.style.display='none';
+  paymentSuccess.style.display='none';
+
+  const method = paymentMethod.value;
+  const senderNumber = senderNumberInput.value.trim();
+  const txn = txnInput.value.trim();
+
+  // Validation
+  if(!method){ paymentError.style.display='block'; paymentError.textContent="পেমেন্ট মাধ্যম নির্বাচন করুন"; return; }
+  if(!senderNumber){ paymentError.style.display='block'; paymentError.textContent="আপনার নম্বর দিন"; return; }
+  if(senderNumber.length !== 11){ paymentError.style.display='block'; paymentError.textContent="নম্বর অবশ্যই ১১ সংখ্যার হতে হবে"; return; }
+  if(!senderNumber.startsWith('01')){ paymentError.style.display='block'; paymentError.textContent="নম্বর অবশ্যই 01 দিয়ে শুরু হতে হবে"; return; }
+  if(!txn){ paymentError.style.display='block'; paymentError.textContent="TXN Number দিন"; return; }
+
+  try {
+    const user = auth.currentUser;
+    if(!user){ alert("আপনি লগইন করেননি।"); return; }
+
+    const storeId = "store_" + user.uid;
+
+    await db.collection('sellers').doc(user.uid).set({
+      number: officeNumber,
+      senderNumber: senderNumber,
+      method: method,
+      txn: txn,
+      status: "Pending",
+      storeId: storeId,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+
+    paymentSuccess.style.display='block';
+    paymentSuccess.textContent='পেমেন্ট তথ্য admin এর কাছে পাঠানো হয়েছে। যাচাইয়ের পরে আপনার অ্যাকাউন্ট Paid হবে।';
+
+    paymentMethod.value=''; paymentInstructions.innerHTML=''; senderNumberInput.value=''; txnInput.value='';
+
+    setTimeout(()=>{ window.location.href='profile.html'; }, 2500);
+
+  } catch(error){
+    paymentError.style.display='block';
+    paymentError.textContent = error.message;
+    console.error(error);
+  }
+});
+
+// Back Arrow function
+function goBack(){ window.history.back(); }
+
+// Bottom nav navigation
+document.querySelector(".nav-profile").addEventListener("click", ()=> window.location.href="profile.html");
+document.querySelector(".nav-products").addEventListener("click", ()=> window.location.href="my-product.html");
+document.querySelector(".nav-orders").addEventListener("click", ()=> window.location.href="orders.html");
+
+// Highlight Profile tab by default (যেখানে পেমেন্ট পেজটি থাকে)
+document.querySelector(".nav-profile").classList.add("active");
+
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>পণ্য সম্পাদনা | MyStockBD</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root {
+  --primary: #e65100;
+  --primary-light: #ff9800;
+  --bg: #f5f6f8;
+  --card: #fff;
+  --text: #1a1a1a;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+/* Reset */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+
+  /* 🔹 সব element select/copy বন্ধ */
+  -webkit-user-select: none;  
+  -moz-user-select: none;     
+  -ms-user-select: none;      
+  user-select: none;          
+  -webkit-touch-callout: none; 
+}
+
+/* 🔹 শুধু input আর textarea-তে select allow থাকবে */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;}
+.topbar{background:var(--card);box-shadow:var(--shadow);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;}
+.brand{font-size:18px;font-weight:600;color:var(--primary);}
+.icon-btn{cursor:pointer;color:var(--primary);}
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+h2{text-align:center;margin:20px 0;color:var(--primary);}
+form{background:var(--card);padding:20px;border-radius:var(--radius);box-shadow:var(--shadow);}
+label{font-weight:500;margin-bottom:4px;display:block;}
+input, textarea, select{padding:12px;width:100%;margin-bottom:16px;border:1px solid #ccc;border-radius:var(--radius);font-size:14px;}
+input:focus, textarea:focus, select:focus{border-color:var(--primary);outline:none;}
+textarea{resize:vertical;}
+.btn{display:inline-block;padding:12px 24px;border:none;border-radius:var(--radius);cursor:pointer;font-weight:600;color:#fff;text-align:center;}
+.btn-primary{background:linear-gradient(90deg,var(--primary-light),var(--primary));transition:0.2s;}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-secondary{background:#4caf50;margin-bottom:20px;}
+.btn-secondary:hover{opacity:0.9;}
+#imageContainer .image-field{display:flex; gap:10px; margin-bottom:10px;}
+#imageContainer .image-field input{flex:1;}
+.image-preview{display:flex; gap:10px; margin-bottom:16px;}
+.image-preview img{width:80px; height:80px; object-fit:cover; border-radius:var(--radius); border:1px solid #ccc;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;}
+.bottom-nav div{text-align:center;font-size:12px;color:#666;cursor:pointer;}
+.bottom-nav .active{color:var(--primary);font-weight:600;}
+.material-icons-outlined{font-size:20px;display:block;}
+
+/* Loader */
+.loader {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid var(--primary);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 80px auto;
+  display: none;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar with Back Arrow -->
+<div class="topbar">
+  <div class="topbar-left" style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+    <span class="material-icons-outlined">arrow_back</span>
+    <span class="brand">MyStockBD</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="material-icons-outlined icon-btn">logout</span>
+  </div>
+</div>
+
+<h2>পণ্য সম্পাদনা করুন</h2>
+
+<div id="loader" class="loader"></div>
+<div id="formContainer" style="display:none;">
+<form id="productForm">
+  <label>পণ্যের নাম:</label>
+  <input type="text" id="title" placeholder="পণ্যের নাম লিখুন" required>
+
+  <label>বিবরণ:</label>
+  <textarea id="description" placeholder="পণ্যের বিবরণ লিখুন" rows="4" required></textarea>
+
+  <label>মূল্য:</label>
+  <input type="number" id="price" placeholder="মূল্য লিখুন" required>
+
+  <label>ক্যাটাগরি:</label>
+  <select id="category" required>
+    <option value="">-- নির্বাচন করুন --</option>
+    <option value="Electronics">Electronics</option>
+    <option value="Fashion">Fashion</option>
+    <option value="Books">Books</option>
+    <option value="Home & Kitchen">Home & Kitchen</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label>Delivery Charge / Shipping Info:</label>
+  <textarea id="deliveryCharge" placeholder="যেমন: ঢাকার মধ্যে 100৳, ঢাকা বাইরে 200৳" rows="2" required></textarea>
+
+  <label>ছবি আপলোড (PostImages ব্যবহার করুন):</label>
+  <button type="button" id="openPostImage" class="btn btn-secondary">ছবি আপলোড করুন</button>
+  <small>📌 সর্বাধিক ৩টি Image URL দিতে পারবেন।</small>
+
+  <div class="image-preview" id="imagePreview"></div>
+  <div id="imageContainer"></div>
+  <button type="button" id="addImageBtn" class="btn btn-secondary">+ আরও ছবি যোগ করুন</button>
+
+  <button type="submit" class="btn btn-primary">আপডেট করুন</button>
+</form>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+  <div class="nav-profile"><span class="material-icons-outlined">person</span>Profile</div>
+  <div class="nav-products"><span class="material-icons-outlined">inventory_2</span>Products</div>
+  <div class="nav-orders"><span class="material-icons-outlined">shopping_bag</span>Orders</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+  measurementId: "G-X85X54F9CK"
+};
+
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+const auth = getAuth(app);
+
+let currentUser = null;
+let productId = null;
+let storeId = null;
+let imageCount = 0;
+
+// Get query params
+const urlParams = new URLSearchParams(window.location.search);
+productId = urlParams.get('product');
+storeId = urlParams.get('store');
+
+if(!productId || !storeId){ alert("Invalid product info!"); window.location.href="my-product.html"; }
+
+onAuthStateChanged(auth, async (user) => {
+  if(!user){ alert("আপনি লগইন করেননি!"); window.location.href="login.html"; return; }
+  currentUser = user;
+
+  document.getElementById("loader").style.display='block';
+  document.getElementById("formContainer").style.display='none';
+
+  const productDoc = await getDoc(doc(firestore, `stores/${storeId}/products/${productId}`));
+  if(!productDoc.exists()){ alert("Product পাওয়া যায়নি!"); window.location.href="my-product.html"; return; }
+  const p = productDoc.data();
+
+  document.getElementById("title").value = p.title;
+  document.getElementById("description").value = p.description;
+  document.getElementById("price").value = p.price;
+  document.getElementById("category").value = p.category;
+  document.getElementById("deliveryCharge").value = p.deliveryCharge || '';
+
+  const imageContainer = document.getElementById("imageContainer");
+  const imagePreview = document.getElementById("imagePreview");
+  imageContainer.innerHTML = '';
+  imagePreview.innerHTML = '';
+  imageCount = 0;
+
+  const allImages = [p.mainImage, ...(p.otherImages || [])];
+  allImages.forEach((imgUrl,index)=>{
+    imageCount++;
+    const div = document.createElement("div");
+    div.className="image-field";
+    div.innerHTML = `<input type="url" class="imageUrl" placeholder="Image URL ${imageCount}" value="${imgUrl}" required>`;
+    imageContainer.appendChild(div);
+    updateImagePreview();
+    div.querySelector("input").addEventListener("input", updateImagePreview);
+  });
+
+  document.getElementById("loader").style.display='none';
+  document.getElementById("formContainer").style.display='block';
+});
+
+function updateImagePreview(){
+  const imagePreview = document.getElementById("imagePreview");
+  imagePreview.innerHTML = '';
+  const urls = document.querySelectorAll(".imageUrl");
+  urls.forEach(input=>{
+    if(input.value.trim()){
+      const img = document.createElement("img");
+      img.src = input.value.trim();
+      imagePreview.appendChild(img);
+    }
+  });
+}
+
+document.getElementById("openPostImage").addEventListener("click", ()=>{
+  alert("📌 ছবি PostImages এ আপলোড করুন এবং Direct Link copy করুন।");
+  window.open("https://postimages.org/", "_blank");
+});
+
+document.getElementById("addImageBtn").addEventListener("click", ()=>{
+  if(imageCount >= 3){ alert("⚠️ সর্বাধিক ৩টি ছবি দিতে পারবেন!"); return; }
+  imageCount++;
+  const div = document.createElement("div");
+  div.className="image-field";
+  div.innerHTML = `<input type="url" class="imageUrl" placeholder="Image URL ${imageCount}" required>`;
+  document.getElementById("imageContainer").appendChild(div);
+  div.querySelector("input").addEventListener("input", updateImagePreview);
+});
+
+document.getElementById("productForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  if(!currentUser){ alert("আপনি লগইন করেননি!"); return; }
+
+  const title = document.getElementById("title").value.trim();
+  const description = document.getElementById("description").value.trim();
+  const price = parseFloat(document.getElementById("price").value);
+  const category = document.getElementById("category").value;
+  const deliveryCharge = document.getElementById("deliveryCharge").value.trim();
+
+  const imageInputs = document.querySelectorAll(".imageUrl");
+  const imageUrls = Array.from(imageInputs).map(i=>i.value.trim()).filter(u=>u);
+  if(imageUrls.length === 0 || imageUrls.length > 3){ alert("১–৩টি ছবি দিন!"); return; }
+
+  const mainImage = imageUrls[0];
+  const otherImages = imageUrls.slice(1);
+
+  try{
+    await updateDoc(doc(firestore, `stores/${storeId}/products/${productId}`), {
+      title, description, price, category, deliveryCharge, mainImage, otherImages
+    });
+    alert("✅ Product updated successfully!");
+    window.location.href="my-product.html";
+  }catch(err){
+    console.error(err);
+    alert("Error updating product: "+err.message);
+  }
+});
+
+// Topbar navigation
+document.querySelector(".topbar-left").addEventListener("click", ()=> window.location.href="my-product.html");
+document.querySelector(".icon-btn.notification").addEventListener("click", ()=> window.location.href="notifications.html");
+document.querySelector(".icon-btn:last-child").addEventListener("click", ()=> signOut(auth).then(()=>window.location.href="seller-login.html"));
+
+// Bottom nav
+document.querySelector(".nav-profile").addEventListener("click", ()=> window.location.href="profile.html");
+document.querySelector(".nav-products").addEventListener("click", ()=> window.location.href="my-product.html");
+document.querySelector(".nav-orders").addEventListener("click", ()=> window.location.href="orders.html");
+
+// Highlight Products tab
+document.querySelector(".nav-products").classList.add("active");
+</script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>সেলার লগইন করুন | MyStockBD</title>
+
+<!-- Google Fonts + Material Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --primary: #2563eb;
+  --accent: #06b6d4;
+  --danger: #ef4444;
+  --gray: #6b7280;
+  --border: #d1d5db;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  background: linear-gradient(135deg, #1e3a8a, #0ea5e9, #06b6d4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 980px;
+  width: 100%;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+}
+.form-box {
+  padding: 2.5rem;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(15px);
+}
+.logo {
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+.logo img {
+  width: 95px;
+  height: 95px;
+  border-radius: 1rem;
+  object-fit: cover;
+  box-shadow: 0 5px 18px rgba(0, 81, 255, 0.6);
+  margin-bottom: 0.8rem;
+  transition: transform 0.3s ease;
+}
+.logo img:hover { transform: scale(1.05);}
+.logo span {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 15px;
+  color: rgb(255, 196, 0);
+}
+
+h2 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+.tagline { font-size: 1rem; color: #e5e7eb; text-align: center; margin-top: 0.5rem; }
+p { font-size: 0.9rem; color: #d1d5db; text-align: center; margin-top: 0.6rem; }
+p a { color: #facc15; text-decoration: none; font-weight: 600; }
+
+form { margin-top: 1.3rem; }
+label { display: block; font-size: 0.9rem; color: #f9fafb; margin-bottom: 0.3rem; font-weight: 600; }
+.input-group { position: relative; margin-bottom: 1.2rem; }
+.input-group input {
+  width: 100%;
+  padding: 0.8rem 2.7rem;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 0.7rem;
+  font-size: 0.95rem;
+  outline: none;
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  transition: all 0.3s;
+}
+.input-group input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.4);
+}
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #cbd5e1;
+  font-size: 1.4rem;
+}
+.toggle-eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #cbd5e1;
+  font-size: 1.3rem;
+  transition: color 0.2s;
+}
+.toggle-eye:hover { color: var(--accent); }
+
+.error-msg {
+  display: none;
+  background: #fee2e2;
+  color: var(--danger);
+  font-size: 0.9rem;
+  padding: 0.7rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+button {
+  width: 100%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 0.8rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+button:hover { transform: translateY(-3px); }
+button.loading { cursor: not-allowed; opacity: 0.75; }
+
+.banner {
+  background: url('https://i.postimg.cc/SsSdKSbY/Discover-the-shopping-revolution-that-039-sweeping-the-nation-Temu-is-changing-the-game-with-unbea.jpg') center/cover no-repeat;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 2rem;
+  color: white;
+  position: relative;
+}
+.banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0.1));
+}
+.banner-text { position: relative; z-index: 1; text-align: center; }
+.banner-text h3 { font-size: 2rem; font-weight: bold; margin-bottom: 0.6rem; }
+.banner-text p { font-size: 1rem; font-weight: 500; color: #f1f5f9; }
+
+@media (max-width: 768px) {
+  .container { grid-template-columns: 1fr; }
+  .banner { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="form-box">
+    <div class="logo">
+      <span>MyStockBD</span>
+    </div>
+
+    <h2>সেলার লগইন করুন</h2>
+    <p class="tagline">আপনার সেলার অ্যাকাউন্টে প্রবেশ করুন</p>
+    <p>সেলার অ্যাকাউন্ট নেই? <a href="signup.html">সাইন আপ করুন</a></p>
+
+    <form id="loginForm">
+      <label for="email">ইমেইল ঠিকানা</label>
+      <div class="input-group">
+        <span class="input-icon material-icons-outlined">mail</span>
+        <input type="email" id="email" name="email" placeholder="আপনার ইমেইল ঠিকানা" required />
+      </div>
+
+      <label for="password">পাসওয়ার্ড</label>
+      <div class="input-group">
+        <span class="input-icon material-icons-outlined">lock</span>
+        <input type="password" id="password" name="password" placeholder="পাসওয়ার্ড লিখুন" required />
+        <span class="toggle-eye material-icons-outlined">visibility</span>
+      </div>
+
+      <div class="error-msg" id="loginError"></div>
+
+      <button type="submit" id="loginBtn">লগইন করুন</button>
+    </form>
+  </div>
+
+  <div class="banner">
+    <div class="banner-text">
+      <h3>MyStockBD</h3>
+      <p>সহজেই নিজের অনলাইন শপ গড়ে তুলুন</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+  measurementId: "G-X85X54F9CK"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// DOM elements
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const passwordInput = document.getElementById('password');
+const toggleEye = document.querySelector('.toggle-eye');
+const loginBtn = document.getElementById('loginBtn');
+
+// Password toggle
+toggleEye.addEventListener('click', () => {
+  passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+  toggleEye.textContent = passwordInput.type === 'password' ? 'visibility' : 'visibility_off';
+});
+
+// Login submit
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.style.display = 'none';
+  loginBtn.classList.add("loading");
+  loginBtn.textContent = "লগইন হচ্ছে...";
+
+  const email = loginForm.email.value.trim();
+  const password = passwordInput.value;
+
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const uid = userCredential.user.uid;
+
+    // Firestore check: existence only
+    let docSnap = await db.collection('sellers').doc(uid).get();
+    if(!docSnap.exists){
+      const querySnap = await db.collection('sellers')
+                                .where('email', '==', email)
+                                .get();
+      if(querySnap.empty){
+        loginError.style.display = 'block';
+        loginError.textContent = "আপনি সেলার হিসেবে সাইন আপ করেননি!";
+        await auth.signOut();
+        loginBtn.classList.remove("loading");
+        loginBtn.textContent = "লগইন করুন";
+        return;
+      }
+      docSnap = querySnap.docs[0];
+    }
+
+    // Success: redirect
+    window.location.href = 'profile.html';
+
+  } catch(error) {
+    loginError.style.display = 'block';
+    const messageMap = {
+      'auth/user-not-found': "এই ইমেইলে কোনো অ্যাকাউন্ট নেই!",
+      'auth/wrong-password': "পাসওয়ার্ড ভুল হয়েছে!",
+      'auth/invalid-email': "ভুল ইমেইল ফরম্যাট!",
+      'auth/invalid-login-credentials': "ইমেইল বা পাসওয়ার্ড মিলছে না!",
+      'auth/user-disabled': "এই অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে।"
+    };
+    loginError.textContent = messageMap[error.code] || "লগইন করতে সমস্যা হয়েছে, আবার চেষ্টা করুন।";
+    console.error(error);
+  } finally {
+    loginBtn.classList.remove("loading");
+    loginBtn.textContent = "লগইন করুন";
+  }
+});
+</script>
+
+</body>
+</html>

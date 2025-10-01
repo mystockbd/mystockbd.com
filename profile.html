@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyStockBD — Seller Profile</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #e65100;
+  --primary-light: #ff9800;
+  --bg: #f5f6f8;
+  --card: #fff;
+  --text: #1a1a1a;
+  --muted: #666;
+  --radius: 14px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+/* Reset */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+
+  /* 🔹 সব element select/copy বন্ধ */
+  -webkit-user-select: none;  
+  -moz-user-select: none;     
+  -ms-user-select: none;      
+  user-select: none;          
+  -webkit-touch-callout: none; 
+}
+
+/* 🔹 শুধু input আর textarea-তে select allow থাকবে */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;}
+
+/* Loader */
+#loader {
+  position: fixed;      
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); 
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid var(--primary);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  z-index: 9999;
+}
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+#containerContent { display: none; }
+
+/* Topbar */
+.topbar{background:var(--card);box-shadow:var(--shadow);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;}
+.brand{font-size:18px;font-weight:600;color:var(--primary);}
+.icon-btn{cursor:pointer;color:var(--primary);}
+
+/* Profile Card */
+.container{padding:16px;max-width:480px;margin:auto;}
+.profile-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.avatar {
+  width: 80px;
+  height: 80px;
+  aspect-ratio: 1 / 1;   /* 🔹 সর্বদা স্কোয়ার থাকবে */
+  border-radius: 50%;    /* 🔹 এটাকে গোল করে ফেলবে */
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 28px;
+  font-weight: bold;
+  flex-shrink: 0;        /* 🔹 চাপা পড়বে না */
+  object-fit: cover;     /* 🔹 ছবি ব্যবহার করলে সুন্দরভাবে fit হবে */
+}
+
+.user-info h2{font-size:18px;margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.user-info p{font-size:14px;color:var(--muted);margin-bottom:6px;}
+.badge{padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;display:inline-block;}
+.paid{background:#4caf50;color:#fff;}
+.pending{background:#ff9800;color:#fff;}
+.rejected{background:#f44336;color:#fff;}
+.unpaid{background:#ff9800;color:#fff;}
+
+/* Edit icon */
+.edit-icon{font-size:18px;cursor:pointer;color:#666;transition:color 0.2s;}
+.edit-icon:hover{color:var(--primary);}
+
+/* Sections & Buttons */
+.section{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:18px;box-shadow:var(--shadow);cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.section h3{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px;color:var(--primary);}
+.add-product{color:#fff;text-align:center;padding:14px;border-radius:var(--radius);cursor:pointer;margin-bottom:18px;box-shadow:var(--shadow);}
+.add-product.orange{background:linear-gradient(90deg,#ff9800 0%,#e65100 100%);}
+.add-product.green{background:linear-gradient(90deg,#4caf50 0%,#388e3c 100%);}
+.subscription-card { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(90deg,#f7076b,#5e3bdf); color: #fff; padding: 16px; border-radius: var(--radius); box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; margin-bottom: 18px; transition: transform 0.2s, box-shadow 0.2s;}
+.subscription-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); }
+.sub-icon span { font-size: 32px; margin-right: 12px;}
+.sub-info h3 { font-size: 16px; font-weight: 600; margin: 0;}
+.sub-action span { font-size: 20px;}
+
+/* Analytics Boxes */
+.analytics-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.analytics-card {
+  flex: 1 1 30%;
+  background: linear-gradient(145deg, #fff, #fdf5f0);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+.analytics-card:hover { transform: translateY(-4px); }
+.analytics-card h4 { font-size: 14px; font-weight: 600; color: #e65100; }
+.analytics-card p { font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0; }
+.analytics-card .material-icons-outlined { font-size: 28px; color: #ff9800; }
+
+@media(max-width:480px){
+  .analytics-container { flex-direction: column; }
+  .analytics-card { flex: 1 1 100%; }
+}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;}
+.bottom-nav div{text-align:center;font-size:12px;color:var(--muted);cursor:pointer;}
+.bottom-nav .active{color:var(--primary);font-weight:600;}
+.material-icons-outlined{font-size:20px;display:block;}
+
+/* Support Icon */
+.support-icon{position:fixed;bottom:90px;right:20px;background:var(--primary);color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:100;transition:transform 0.2s;}
+.support-icon:hover{transform:scale(1.1);}
+
+/* Floating Support Menu */
+.support-menu {
+  position: fixed;
+  bottom: 160px;
+  right: 20px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 101;
+}
+.support-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.support-btn img {
+  width: 28px;
+  height: 28px;
+}
+.support-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+.support-btn.whatsapp { background: #25D366; }
+.support-btn.facebook { background: #1877F2; }
+</style>
+</head>
+<body>
+
+<div id="loader"></div>
+<div id="containerContent" class="container">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="brand">MyStockBD Seller</span>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span class="material-icons-outlined icon-btn" onclick="logout()">logout</span>
+    </div>
+  </div>
+
+  <!-- Profile Card -->
+  <div class="profile-card">
+    <div class="avatar" id="avatar">S</div>
+    <div class="user-info">
+      <h2 id="sellerName">
+        Loading...
+        <span class="material-icons-outlined edit-icon" onclick="editName()">edit</span>
+      </h2>
+      <p id="sellerEmail">Loading...</p>
+      <span id="sellerStatus" class="badge pending">Pending</span>
+    </div>
+  </div>
+
+  <!-- Analytics -->
+  <div class="analytics-container">
+    <div class="analytics-card">
+      <h4>Total Products</h4>
+      <p id="totalProducts">0</p>
+      <span class="material-icons-outlined">inventory_2</span>
+    </div>
+    <div class="analytics-card">
+      <h4>Total Orders</h4>
+      <p id="totalOrders">0</p>
+      <span class="material-icons-outlined">receipt_long</span>
+    </div>
+    <div class="analytics-card">
+      <h4>Earnings</h4>
+      <p id="earnings">৳0</p>
+      <span class="material-icons-outlined">payments</span>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="add-product orange" onclick="checkStatus(goToAddProduct)">
+    <h3>+ নতুন প্রোডাক্ট আপলোড করুন</h3>
+  </div>
+
+  <div class="add-product green" onclick="checkStatus(goToMyShop)">
+    <h3>MY WEBSITE</h3>
+  </div>
+
+  <div class="subscription-card" onclick="goToSubscription()">
+    <div class="sub-icon">
+      <span class="material-icons-outlined">workspace_premium</span>
+    </div>
+    <div class="sub-info">
+      <h3>Premium Subscription</h3>
+    </div>
+    <div class="sub-action">
+      <span class="material-icons-outlined">arrow_forward_ios</span>
+    </div>
+  </div>
+
+  <div class="section" onclick="checkStatus(goToProducts)">
+    <h3><span class="material-icons-outlined">inventory_2</span> আমার প্রোডাক্টসমূহ</h3>
+  </div>
+
+  <div class="section" onclick="checkStatus(goToOrders)">
+    <h3><span class="material-icons-outlined">receipt_long</span> কাস্টমার অর্ডার</h3>
+  </div>
+
+  <!-- Your Shop Link Section with Copy Icon -->
+  <div class="section" style="display:flex;align-items:center;justify-content:space-between;">
+    <div style="flex:1;cursor:pointer;" onclick="copyShopLink()">
+      <h3><span class="material-icons-outlined">link</span> Your Website Link</h3>
+      <p id="shopLinkText" style="font-size:14px;color:var(--muted);margin-top:6px;word-break:break-all;">Loading...</p>
+    </div>
+    <span class="material-icons-outlined" style="cursor:pointer;color:var(--primary);" onclick="copyShopLink(); event.stopPropagation();">content_copy</span>
+  </div>
+
+</div>
+
+<!-- Support Icon -->
+<div class="support-icon" onclick="toggleSupportMenu()">
+  <span class="material-icons-outlined">support_agent</span>
+</div>
+
+<!-- Floating Support Menu -->
+<div id="supportMenu" class="support-menu">
+  <a href="https://wa.me/8801871379179?text=Message%20Md%20Kaoser%20Azom%20on%20WhatsApp" target="_blank" class="support-btn whatsapp">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="WhatsApp">
+  </a>
+  <a href="https://www.facebook.com/share/1HUk461Hwu/" target="_blank" class="support-btn facebook">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook">
+  </a>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="active" onclick="checkStatus(()=>{})">
+    <span class="material-icons-outlined">person</span>
+    Profile
+  </div>
+  <div onclick="checkStatus(goToProducts)">
+    <span class="material-icons-outlined">inventory_2</span>
+    Products
+  </div>
+  <div onclick="checkStatus(goToOrders)">
+    <span class="material-icons-outlined">shopping_bag</span>
+    Orders
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+};
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let userStatus = "";
+let sellerStoreId = "";
+
+const loader = document.getElementById("loader");
+const containerContent = document.getElementById("containerContent");
+
+// Auth state
+auth.onAuthStateChanged(user=>{
+  if(!user){ window.location.href = "login.html"; return; }
+
+  db.collection("sellers").doc(user.uid).onSnapshot(doc=>{
+    if(!doc.exists){ alert("Profile তৈরি হয়নি।"); auth.signOut(); window.location.href="login.html"; return; }
+
+    const data = doc.data();
+    document.getElementById("sellerName").firstChild.nodeValue = data.name;
+    document.getElementById("sellerEmail").innerText = data.email;
+    userStatus = data.status.toLowerCase();
+    sellerStoreId = data.storeId || "";
+
+    // 🔹 এখানে নতুন status logic
+    const badge = document.getElementById("sellerStatus");
+    let statusText = "";
+    let badgeClass = "";
+
+    switch(userStatus){
+  case "active":
+    statusText = "Active";
+    badgeClass = "badge"; // শুধু badge class
+    badge.style.backgroundColor = "#4caf50";
+    badge.style.color = "#000000";  
+    break;
+  case "pending":
+    statusText = "Pending";
+    badgeClass = "badge";
+    badge.style.backgroundColor = "#4848e0";
+    badge.style.color = "#000000";
+    break;
+  case "rejected":
+    statusText = "Rejected";
+    badgeClass = "badge";
+    badge.style.backgroundColor = "#fc0303";
+    badge.style.color = "#000000";
+    break;
+  case "inactive":
+    statusText = "inactive";
+    badgeClass = "badge";
+    badge.style.backgroundColor = "#ff6a00";
+    badge.style.color = "#000000";
+    break;
+  default:
+    statusText = userStatus;
+    badgeClass = "badge";
+    badge.style.backgroundColor = "#4caf50";
+    badge.style.color = "#000000";
+}
+badge.innerText = statusText;
+badge.className = badgeClass;
+
+
+    document.getElementById("avatar").innerText = data.name.charAt(0).toUpperCase();
+
+    // Subscription card hide/show
+    const subCard = document.querySelector(".subscription-card");
+    if (userStatus === "active" || userStatus === "pending") {
+      subCard.style.display = "none";
+    } else {
+      subCard.style.display = "flex";
+    }
+
+    // Restricted buttons only for unpaid/rejected
+    function checkStatus(callback){
+      if(userStatus.toLowerCase() === "active"){ 
+        callback();  // paid user can navigate freely
+      } else { 
+        alert("Action restricted! আপনার account status " + userStatus.toUpperCase()); 
+      }
+    }
+
+    loadAnalytics(user.uid);
+
+    loader.style.display = "none";
+    containerContent.style.display = "block";
+  });
+});
+
+
+// Toggle Support Menu
+function toggleSupportMenu(){
+  const menu = document.getElementById("supportMenu");
+  menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+}
+
+// Edit seller name
+function editName(){
+  const nameElement = document.getElementById("sellerName");
+  const currentName = nameElement.firstChild.nodeValue.trim();
+  const newName = prompt("আপনার নতুন নাম লিখুন:", currentName);
+  if(newName && newName.trim() !== ""){
+    const user = auth.currentUser;
+    if(user){
+      db.collection("sellers").doc(user.uid).update({name: newName.trim()})
+        .then(()=>{
+          nameElement.firstChild.nodeValue = newName.trim();
+          document.getElementById("avatar").innerText = newName.trim().charAt(0).toUpperCase();
+          alert("নাম আপডেট হয়েছে!");
+        })
+        .catch(err => alert("নাম update করতে সমস্যা: " + err.message));
+    }
+  }
+}
+
+// Check status before navigation
+function checkStatus(callback){
+  if(userStatus.toLowerCase()==="active"){ 
+    callback(); 
+  }
+  else{ 
+    alert("আপনার একাউন্ট স্ট্যাটাস আগে পেইড করুন।"); 
+  }
+}
+
+// Analytics
+function loadAnalytics(uid){
+  db.collection("sellers").doc(uid).get().then(snap=>{
+    if(!snap.exists) return;
+    const storeId = snap.data().storeId;
+    sellerStoreId = storeId;
+
+    // Update Shop Link text
+    const shopLinkText = document.getElementById('shopLinkText');
+    if(storeId) shopLinkText.innerText = window.location.origin + "/buyer-profile.html?storeId=" + storeId;
+    else shopLinkText.innerText = "Store ID পাওয়া যায়নি।";
+
+    db.collection("stores").doc(storeId).collection("products").get()
+    .then(productsSnap=>{ document.getElementById('totalProducts').innerText = productsSnap.size; });
+
+    db.collection('sellers').doc(uid).collection('orders')
+      .onSnapshot(ordersSnap=>{
+        document.getElementById('totalOrders').innerText = ordersSnap.size;
+        let earnings = 0;
+        ordersSnap.forEach(doc=>{ earnings += doc.data().totalPrice||0; });
+        document.getElementById('earnings').innerText = '৳'+earnings;
+      });
+  });
+}
+
+// Copy shop link function
+function copyShopLink() {
+  if(!sellerStoreId){ alert("Store ID পাওয়া যায়নি।"); return; }
+  const shopLink = window.location.origin + "/buyer-profile.html?storeId=" + sellerStoreId;
+  navigator.clipboard.writeText(shopLink).then(() => { alert("Shop Link কপি হয়েছে: " + shopLink); });
+}
+
+// Navigation
+function goToProducts(){ window.location.href="my-product.html"; }
+function goToOrders(){ window.location.href="orders.html"; }
+function goToAddProduct(){ window.location.href="product-upload.html"; }
+function goToMyShop(){ window.location.href="buyer-profile.html?storeId=" + sellerStoreId; }
+function goToSubscription(){ window.location.href="subscription.html"; }
+function logout(){ auth.signOut().then(()=>{ window.location.href="login.html"; }); }
+</script>
+</body>
+</html>

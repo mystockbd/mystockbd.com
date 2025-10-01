@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --primary:#4f46e5;
+  --accent:#14b8a6;
+  --gray:#9ca3af;
+  --border:#d1d5db;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Noto Sans Bengali',sans-serif;
+  background:linear-gradient(135deg,#eef2ff,#f0fdfa);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:1rem;
+}
+.container{
+  background: rgba(255,255,255,0.95);
+  padding:2.5rem;
+  border-radius:1.5rem;
+  max-width:450px;
+  width:100%;
+  box-shadow:0 12px 40px rgba(0,0,0,0.12);
+  backdrop-filter: blur(10px);
+}
+h2{text-align:center;margin-bottom:0.5rem;font-weight:700;font-size:1.7rem;}
+p{text-align:center;color:var(--gray);margin-bottom:1rem;}
+p a{color:var(--primary);text-decoration:none;font-weight:600;transition:0.2s;}
+p a:hover{color:var(--accent);text-decoration:underline;}
+form{display:flex;flex-direction:column;gap:1rem;margin-top:0.5rem;}
+.input-group{position:relative;}
+input{
+  padding:0.75rem 1rem;
+  border:1px solid var(--border);
+  border-radius:0.75rem;
+  font-size:1rem;
+  width:100%;
+  outline:none;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  transition:0.3s;
+}
+input:focus{
+  border-color:var(--primary);
+  box-shadow:0 4px 15px rgba(79,70,229,0.25);
+}
+.toggle-eye{
+  position:absolute;right:15px;top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;color:var(--gray);font-size:1.3rem;
+  transition:0.2s;
+}
+.toggle-eye:hover{color:var(--primary);}
+button{
+  padding:0.85rem;font-size:1.05rem;font-weight:600;
+  border-radius:0.75rem;border:none;
+  cursor:pointer;color:white;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  box-shadow:0 6px 15px rgba(79,70,229,0.3);
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  transition:0.3s;
+}
+button:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(79,70,229,0.35);}
+.error-msg{color:#dc2626;font-size:0.85rem;text-align:center;display:none;}
+.loader{
+  border:4px solid #f3f3f3;
+  border-top:4px solid var(--primary);
+  border-radius:50%;
+  width:20px;height:20px;
+  animation:spin 1s linear infinite;
+  display:none;
+  margin-left:8px;
+}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>সাইন আপ</h2>
+  <p>ইমেইল দিয়ে নতুন অ্যাকাউন্ট তৈরি করুন</p>
+  <p>ইতিমধ্যে account আছে? <a href="buyer-login.html">লগইন করুন</a></p>
+
+  <form id="signupForm">
+    <div class="input-group">
+      <input type="text" id="name" placeholder="আপনার নাম" required>
+    </div>
+    <div class="input-group">
+      <input type="email" id="email" placeholder="আপনার ইমেইল" required>
+    </div>
+    <div class="input-group">
+      <input type="password" id="password" placeholder="পাসওয়ার্ড" required>
+      <span class="toggle-eye material-icons-outlined">visibility</span>
+    </div>
+    <div class="error-msg" id="signupError"></div>
+    <button type="submit">Sign Up <span class="loader" id="loader"></span></button>
+  </form>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const signupForm = document.getElementById('signupForm');
+const signupError = document.getElementById('signupError');
+const passwordInput = document.getElementById('password');
+const toggleEye = document.querySelector('.toggle-eye');
+const loader = document.getElementById('loader');
+
+const urlParams = new URLSearchParams(window.location.search);
+const storeId = urlParams.get('storeId');
+
+const loginLink = document.querySelector('p a[href="buyer-login.html"]');
+if(storeId && loginLink){
+    loginLink.href = `buyer-login.html?storeId=${encodeURIComponent(storeId)}`;
+}
+
+toggleEye.addEventListener('click', () => {
+  if(passwordInput.type==='password'){ 
+    passwordInput.type='text'; 
+    toggleEye.textContent='visibility_off'; 
+  } else { 
+    passwordInput.type='password'; 
+    toggleEye.textContent='visibility'; 
+  }
+});
+
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  signupError.style.display = 'none';
+  loader.style.display = 'inline-block';
+
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = passwordInput.value;
+
+  if(password.length < 6){
+    signupError.style.display = 'block';
+    signupError.textContent = 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!';
+    loader.style.display = 'none';
+    return;
+  }
+
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email,password);
+    const uid = userCredential.user.uid;
+
+    await db.collection('users').doc(uid).set({
+      name,
+      email,
+      role: 'buyer',
+      createdAt: Date.now()
+    });
+
+    let redirectUrl = 'buyer-profile.html';
+    if(storeId){
+        redirectUrl += `?storeId=${encodeURIComponent(storeId)}`;
+    }
+    window.location.href = redirectUrl;
+
+  } catch(error) {
+    signupError.style.display = 'block';
+    loader.style.display = 'none';
+    if(error.code === 'auth/email-already-in-use'){
+      signupError.textContent='এই ইমেইল ইতিমধ্যে ব্যবহৃত হয়েছে!';
+    } else if(error.code === 'auth/invalid-email'){
+      signupError.textContent='দয়া করে সঠিক ইমেইল ঠিকানা দিন!';
+    } else if(error.code === 'auth/weak-password'){
+      signupError.textContent='পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!';
+    } else{
+      signupError.textContent = error.message;
+    }
+    console.error(error);
+  }
+});
+</script>
+
+</body>
+</html>

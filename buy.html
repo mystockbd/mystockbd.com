@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buy Now</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root{
+  --primary:#ff003c;
+  --secondary:#ff9900;
+  --bg:#f8f8f8;
+  --card:#fff;
+  --text:#333;
+  --muted:#777;
+  --radius:12px;
+  --shadow:0 4px 12px rgba(0,0,0,0.08);
+  --transition:0.3s;
+}
+/* Reset */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+
+  /* 🔹 সব element select/copy বন্ধ */
+  -webkit-user-select: none;  
+  -moz-user-select: none;     
+  -ms-user-select: none;      
+  user-select: none;          
+  -webkit-touch-callout: none; 
+}
+
+/* 🔹 শুধু input আর textarea-তে select allow থাকবে */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding-bottom:150px;}
+header{position:relative;padding:18px 20px;background:var(--primary);color:#fff;display:flex;align-items:center;gap:12px;}
+header .back-btn{cursor:pointer;font-size:26px;}
+header .logo h1{font-size:20px;font-weight:600;flex:1;}
+.buy-container{padding:15px;}
+.buy-container img{width:100%;height:250px;object-fit:cover;border-radius:12px;margin-bottom:12px;cursor:pointer;}
+.buy-container h2{font-size:18px;margin-bottom:8px;}
+.buy-container p{margin-bottom:8px;}
+.quantity-selector{display:flex;align-items:center;gap:12px;margin:12px 0;}
+.quantity-selector button{width:32px;height:32px;border:none;border-radius:50%;background:var(--card);cursor:pointer;font-size:18px;}
+#qtyValue{min-width:32px;text-align:center;font-weight:600;font-size:16px;}
+#checkoutBtn{width:100%;padding:12px;background:linear-gradient(90deg,var(--primary),var(--secondary));color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;}
+.delivery-info{display:none;background:var(--card);padding:15px;margin-top:15px;border-radius:12px;box-shadow:var(--shadow);}
+.delivery-info input{width:100%;padding:10px;margin-bottom:10px;border-radius:12px;border:1px solid #ccc;font-size:14px;}
+.delivery-info .submit-btn{width:100%;padding:12px;background:linear-gradient(90deg,var(--primary),var(--secondary));color:#fff;border:none;border-radius:12px;font-weight:600;cursor:pointer;font-size:16px;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 6px rgba(0,0,0,0.05);border-radius:16px 16px 0 0;}
+.bottom-nav div{text-align:center;font-size:12px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;}
+.bottom-nav .active{color:var(--primary);font-weight:600;}
+.material-icons-outlined{font-size:24px;display:block;margin-bottom:2px;}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="material-icons-outlined back-btn" onclick="goBack()">arrow_back</span>
+  <div class="logo"><h1>Buy Now</h1></div>
+</header>
+
+<div class="buy-container">
+  <img id="mainImage" src="" alt="Product" onclick="openImage(this.src)">
+  <h2 id="productName"></h2>
+  <p>Price: ৳<span id="productPrice">0</span></p>
+  <div class="quantity-selector">
+    <button id="decreaseQty">-</button>
+    <span id="qtyValue">1</span>
+    <button id="increaseQty">+</button>
+  </div>
+  <p>Total: ৳<span id="totalPrice">0</span></p>
+  <button id="checkoutBtn">Checkout</button>
+
+  <div class="delivery-info" id="deliveryForm">
+    <h3>Delivery Information</h3>
+    <input type="text" id="phone" placeholder="ফোন নম্বর">
+    <input type="text" id="division" placeholder="বিভাগ">
+    <input type="text" id="district" placeholder="জেলা">
+    <input type="text" id="upazila" placeholder="উপজেলা">
+    <input type="text" id="postal" placeholder="Postal Code">
+    <button class="submit-btn" onclick="submitOrder()">Confirm Order</button>
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div data-page="index.html"><span class="material-icons-outlined">home</span>Home</div>
+  <div data-page="favourite.html"><span class="material-icons-outlined">favorite</span>Favourites</div>
+  <div data-page="cart.html"><span class="material-icons-outlined">shopping_cart</span>Cart</div>
+  <div data-page="buyer-profile.html"><span class="material-icons-outlined">person</span>Profile</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+// Firebase Config
+const firebaseConfig = { apiKey:"AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug", authDomain:"mystockbd-2562f.firebaseapp.com", projectId:"mystockbd-2562f", storageBucket:"mystockbd-2562f.appspot.com", messagingSenderId:"502104908886", appId:"1:502104908886:web:ec887afe724c0f1a2f87f7"};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function goBack(){ window.history.back(); }
+
+let qty=1;
+const qtyValue=document.getElementById('qtyValue');
+const productPriceElem=document.getElementById('productPrice');
+const totalPriceElem=document.getElementById('totalPrice');
+let selectedProductPrice=0;
+let productId='';
+const mainImage=document.getElementById('mainImage');
+const productNameElem=document.getElementById('productName');
+
+document.getElementById('increaseQty').addEventListener('click',()=>{
+  qty++; qtyValue.textContent=qty; updateTotalPrice();
+});
+document.getElementById('decreaseQty').addEventListener('click',()=>{
+  if(qty>1) qty--; qtyValue.textContent=qty; updateTotalPrice();
+});
+function updateTotalPrice(){ totalPriceElem.textContent = selectedProductPrice*qty; }
+
+// Load selected product from localStorage
+const selected = JSON.parse(localStorage.getItem('selectedProduct'));
+if(!selected){ alert('No product selected!'); window.location.href='index.html'; }
+productId = selected.productId;
+const storeId = selected.storeId;
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){ alert('আগে লগইন করুন!'); window.location.href='buyer-login.html'; return; }
+  const docRef = db.collection('stores').doc(storeId).collection('products').doc(productId);
+  const docSnap = await docRef.get();
+  if(!docSnap.exists) return;
+  const product = docSnap.data();
+  mainImage.src = product.mainImage;
+  productNameElem.textContent = product.title;
+  productPriceElem.textContent = product.price;
+  selectedProductPrice = product.price;
+  updateTotalPrice();
+});
+
+// Checkout Button
+const checkoutBtn=document.getElementById('checkoutBtn');
+const deliveryForm=document.getElementById('deliveryForm');
+checkoutBtn.addEventListener('click',()=>{ deliveryForm.style.display='block'; deliveryForm.scrollIntoView({behavior:'smooth'}); });
+
+// Generate Order ID
+function generateOrderId(){ const now=new Date(); return now.getFullYear()+'-'+(now.getMonth()+1)+now.getDate()+'-'+Math.random().toString(36).substring(2,6).toUpperCase(); }
+
+// Submit Order
+async function submitOrder(){
+  const phone=document.getElementById('phone').value.trim();
+  const division=document.getElementById('division').value.trim();
+  const district=document.getElementById('district').value.trim();
+  const upazila=document.getElementById('upazila').value.trim();
+  const postal=document.getElementById('postal').value.trim();
+  if(!phone||!division||!district||!upazila){ alert('সকল ফিল্ড পূরণ করুন!'); return; }
+
+  const user=auth.currentUser;
+  if(!user) return;
+
+  let userName="Unknown User";
+  try{
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    if(userDoc.exists){ userName = userDoc.data().name || "Unknown User"; }
+  }catch(err){ console.error(err); }
+
+  const selectedProduct = {
+    id: productId,
+    name: productNameElem.textContent,
+    price: selectedProductPrice,
+    qty: qty,
+    mainImage: mainImage.src
+  };
+
+  const sellerId = storeId.replace('store_','');
+  const totalPrice = selectedProduct.price * selectedProduct.qty;
+  const orderId = generateOrderId();
+
+  const orderData = {
+    orderId,
+    userName,
+    userId: user.uid,
+    phone,
+    division,
+    district,
+    upazila,
+    postal,
+    items: [selectedProduct],
+    totalPrice,
+    storeId,
+    sellerId,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    status:'Pending'
+  };
+
+  try{
+    await db.collection('users').doc(user.uid).collection('orders').doc(orderId).set(orderData);
+    await db.collection('sellers').doc(sellerId).collection('orders').doc(orderId).set(orderData);
+    alert('অর্ডার কনফার্ম হয়েছে! Order ID: '+orderId);
+    window.location.href=`buyer-profile.html?storeId=${storeId}`;
+  }catch(err){ console.error(err); alert('অর্ডার সেভ করতে সমস্যা হয়েছে: '+err.message); }
+}
+
+// Lightbox Function for Image
+function openImage(src){
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '1000';
+    overlay.style.cursor = 'zoom-out';
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.maxWidth = '90%';
+    img.style.maxHeight = '90%';
+    img.style.borderRadius = '12px';
+    overlay.appendChild(img);
+
+    overlay.onclick = () => document.body.removeChild(overlay);
+
+    document.body.appendChild(overlay);
+}
+// Bottom Navigation
+const bottomNav = document.getElementById('bottomNav');
+const currentStoreId = localStorage.getItem('currentStoreId');
+
+// Nav click event
+bottomNav.querySelectorAll('div').forEach(nav => {
+  const page = nav.dataset.page;
+  nav.addEventListener('click', () => {
+    const url = currentStoreId ? `${page}?storeId=${currentStoreId}` : page;
+    window.location.href = url;
+  });
+});
+
+// Highlight active nav
+const currentPage = window.location.pathname.split('/').pop();
+bottomNav.querySelectorAll('div').forEach(nav => {
+  if(currentPage === 'buy.html'){
+    if(nav.dataset.page === 'index.html') nav.classList.add('active'); // Home active on Buy Page
+  } else {
+    if(nav.dataset.page === currentPage) nav.classList.add('active');
+  }
+});
+</script>
+</body>
+</html>

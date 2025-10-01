@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyStockBD — My Products</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root {
+  --primary: #e65100;
+  --primary-light: #ff9800;
+  --bg: #f5f6f8;
+  --card: #fff;
+  --text: #1a1a1a;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+/* Reset */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+
+  /* 🔹 সব element select/copy বন্ধ */
+  -webkit-user-select: none;  
+  -moz-user-select: none;     
+  -ms-user-select: none;      
+  user-select: none;          
+  -webkit-touch-callout: none; 
+}
+
+/* 🔹 শুধু input আর textarea-তে select allow থাকবে */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;}
+
+/* Loader */
+#loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid var(--primary);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  z-index: 9999;
+}
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Hide content while loading */
+#productsContainer { display: none; }
+
+.topbar{background:var(--card);box-shadow:var(--shadow);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;}
+.brand{font-size:18px;font-weight:600;color:var(--primary);}
+.icon-btn{cursor:pointer;color:var(--primary);}
+
+h2{text-align:center;color:var(--primary);margin:20px 0;}
+.product-card{background:var(--card);padding:12px;border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center;}
+.product-card img{width:80px;height:80px;border-radius:8px;object-fit:cover;}
+.product-info{flex:1;}
+.product-info h3{margin:0 0 4px 0;color:var(--primary);}
+.product-info p{margin:0 0 4px 0;font-size:14px;color:#666;}
+.product-info span{font-weight:600;}
+.btn{padding:6px 12px;border:none;border-radius:8px;cursor:pointer;font-weight:600;color:#fff;}
+.btn-edit{background:#4caf50;margin-right:6px;}
+.btn-edit:hover{opacity:0.9;}
+.btn-delete{background:#f44336;}
+.btn-delete:hover{opacity:0.9;}
+
+/* Bottom Navigation */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;}
+.bottom-nav div{text-align:center;font-size:12px;color:#666;cursor:pointer;display:flex;flex-direction:column;align-items:center;}
+.bottom-nav .material-icons-outlined{font-size:20px;margin-bottom:2px;}
+.bottom-nav .active{color:var(--primary);font-weight:600;}
+.bottom-nav .active .material-icons-outlined{color:var(--primary);} /* icon color highlight */
+
+/* Search Bar Professional Design */
+.search-container{
+  padding:0 20px 16px 20px;
+  position: relative;
+}
+
+.search-container .material-icons-outlined{
+  position: absolute;
+  left: 33px; /* আগের 14px থেকে সামান্য adjust */
+  top: 38%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 20px;
+  pointer-events: none; /* যাতে icon ক্লিক করার সময় input focus থাকে */
+}
+
+#searchInput{
+  width:100%;
+  padding:10px 12px 10px 40px; /* left padding icon অনুযায়ী */
+  border-radius:20px;
+  border:1px solid #ddd;
+  font-size:14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+
+#searchInput:focus{
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(230,81,0,0.2);
+}
+#searchInput::placeholder{
+  color:#bbb;
+  font-style:italic;
+}
+
+/* Search Highlight */
+.product-card.highlight { 
+  border: 2px solid var(--primary);
+  box-shadow: 0 6px 16px rgba(230, 81, 0,0.2);
+}
+</style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="loader"></div>
+
+<!-- Topbar with Back Arrow -->
+<div class="topbar">
+  <div class="topbar-left" style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+    <span class="material-icons-outlined">arrow_back</span>
+    <span class="brand">MyStockBD</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="material-icons-outlined icon-btn logout">logout</span>
+  </div>
+</div>
+
+<h2>আমার Products</h2>
+
+<!-- Search Bar -->
+<div class="search-container">
+  <span class="material-icons-outlined">search</span>
+  <input type="text" id="searchInput" placeholder="Search by title or price...">
+</div>
+
+<div id="productsContainer">Loading...</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+  <div class="nav-profile"><span class="material-icons-outlined">person</span>Profile</div>
+  <div class="nav-products"><span class="material-icons-outlined">inventory_2</span>Products</div>
+  <div class="nav-orders"><span class="material-icons-outlined">shopping_bag</span>Orders</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7",
+  measurementId: "G-X85X54F9CK",
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const loader = document.getElementById("loader");
+const productsContainer = document.getElementById("productsContainer");
+
+// Show "No items" image/message
+function showNoItems(container, message="কোনো আইটেম নেই।", imageUrl="https://i.postimg.cc/3rL3q8cD/Screenshot-2025-09-24-121738-removebg-preview.png"){
+  container.innerHTML = `
+    <div style="
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+      text-align: center;
+      padding: 20px;
+    ">
+      <img src="${imageUrl}" alt="No Items" style="max-width:400px; width:100%; height:auto;">
+      <p style="margin-top:20px; color:#666; font-size:18px;">${message}</p>
+    </div>
+  `;
+}
+
+auth.onAuthStateChanged(async (user)=>{
+  if(!user){ window.location.href="login.html"; return; }
+
+  const sellerDoc = await db.collection("sellers").doc(user.uid).get();
+  if(!sellerDoc.exists){ alert("Seller info missing!"); auth.signOut(); return; }
+  const storeId = sellerDoc.data().storeId;
+
+  // Load products
+  try {
+    const productsSnap = await db.collection("stores").doc(storeId).collection("products").get();
+    productsContainer.innerHTML = "";
+    if(productsSnap.empty){
+      showNoItems(productsContainer, "কোনো প্রোডাক্ট নেই।");
+    } else {
+      productsSnap.forEach(doc=>{
+        const p = doc.data();
+        const div = document.createElement("div");
+        div.className="product-card";
+        div.innerHTML=`
+          <img src="${p.mainImage}" alt="${p.title}">
+          <div class="product-info">
+            <h3>${p.title}</h3>
+            <p>${p.description}</p>
+            <p>মূল্য: <span>${p.price} ৳</span></p>
+            <p>ক্যাটাগরি: ${p.category}</p>
+            <p>Delivery Info: <span>${p.deliveryCharge || 'দেওয়া হয়নি'}</span></p>
+          </div>
+          <div>
+            <button class="btn btn-edit" onclick="editProduct('${storeId}','${p.productId}')">Edit</button>
+            <button class="btn btn-delete" onclick="deleteProduct('${storeId}','${p.productId}')">Delete</button>
+          </div>
+        `;
+        productsContainer.appendChild(div);
+      });
+    }
+  } catch(err){
+    console.error(err);
+    productsContainer.innerHTML="<p>ডাটা লোড করতে সমস্যা হচ্ছে।</p>";
+  }
+
+  loader.style.display = "none";
+  productsContainer.style.display = "block";
+});
+
+function editProduct(storeId, productId){
+  window.location.href = `product-edit.html?store=${storeId}&product=${productId}`;
+}
+
+async function deleteProduct(storeId, productId){
+  if(confirm("আপনি কি এই product মুছতে চান?")){
+    try{
+      await db.collection("stores").doc(storeId).collection("products").doc(productId).delete();
+      alert("Product deleted successfully!");
+      location.reload();
+    }catch(err){
+      console.error(err);
+      alert("Error deleting product: "+err.message);
+    }
+  }
+}
+
+// Topbar navigation
+document.querySelector(".topbar-left").addEventListener("click", ()=> window.location.href="profile.html");
+document.querySelector(".icon-btn.logout").addEventListener("click", ()=> auth.signOut().then(()=>window.location.href="login.html"));
+
+// Bottom nav navigation
+document.querySelector(".nav-profile").addEventListener("click", ()=> window.location.href="profile.html");
+document.querySelector(".nav-products").addEventListener("click", ()=> window.location.href="my-product.html");
+document.querySelector(".nav-orders").addEventListener("click", ()=> window.location.href="orders.html");
+
+// Highlight Products tab
+document.querySelector(".nav-products").classList.add("active");
+
+// ===================
+// Search functionality (updated with highlight fix)
+const searchInput = document.getElementById("searchInput");
+
+searchInput.addEventListener("input", () => {
+  const query = searchInput.value.toLowerCase().trim();
+  const productCards = document.querySelectorAll(".product-card");
+
+  productCards.forEach(card => {
+    const title = card.querySelector("h3").textContent.toLowerCase();
+    const price = card.querySelector("p span").textContent.toLowerCase();
+
+    if(query === "") {
+      card.style.display = "flex";  // সব products দেখান
+      card.classList.remove("highlight"); // highlight মুছে দিন
+    } else if(title.includes(query) || price.includes(query)) {
+      card.style.display = "flex";
+      card.classList.add("highlight");
+    } else {
+      card.style.display = "none";
+      card.classList.remove("highlight");
+    }
+  });
+});
+</script>
+
+</body>
+</html>

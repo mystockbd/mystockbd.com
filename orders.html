@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller Orders</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root{
+  --primary:#ff5900;
+  --secondary:#ff7a33;
+  --bg:#f8f8f8;
+  --card:#fff;
+  --text:#333;
+  --radius:16px;
+  --shadow:0 8px 24px rgba(0,0,0,0.12);
+  --transition:0.3s ease;
+}
+/* Reset */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+
+  /* 🔹 সব element select/copy বন্ধ */
+  -webkit-user-select: none;  
+  -moz-user-select: none;     
+  -ms-user-select: none;      
+  user-select: none;          
+  -webkit-touch-callout: none; 
+}
+
+/* 🔹 শুধু input আর textarea-তে select allow থাকবে */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);padding-bottom:60px;line-height:1.5;}
+
+/* Header */
+header{position:relative;padding:18px 20px;background:var(--primary);color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+header .back-btn{cursor:pointer;font-size:26px;transition:var(--transition);}
+header .back-btn:hover{transform:scale(1.1);}
+header .logo h1{font-size:20px;font-weight:600;flex:1;}
+
+/* Search Bar */
+.search-container{
+  padding:10px 20px;
+  position: relative;
+}
+.search-container .material-icons-outlined{
+  position: absolute;
+  left:33px;
+  top:52%;
+  transform: translateY(-50%);
+  color:#999;
+  font-size:20px;
+  pointer-events:none;
+}
+#searchInput{
+  width:100%;
+  padding:10px 12px 10px 40px;
+  border-radius:20px;
+  border:1px solid #ddd;
+  font-size:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+#searchInput:focus{
+  outline:none;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(255,89,0,0.2);
+}
+#searchInput::placeholder{
+  color:#bbb;
+  font-style:italic;
+}
+
+/* Orders */
+.orders-container{padding:15px;}
+.order-item{
+  background:var(--card);
+  padding:12px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  margin-bottom:14px;
+  transition:transform var(--transition), border var(--transition), box-shadow var(--transition);
+}
+.order-item:hover{transform:translateY(-3px);}
+.order-item h3{font-size:16px;margin-bottom:6px;color:var(--primary);}
+.order-item p{font-size:14px;margin-bottom:4px;}
+.order-item img{width:60px;height:60px;border-radius:12px;cursor:pointer;margin-right:10px;vertical-align:middle;}
+.order-item strong{cursor:pointer;}
+.status{font-weight:600;color:#ff5900; margin-bottom:8px;}
+.status-buttons{display:flex;gap:8px; flex-wrap:wrap; margin-top:5px;}
+.order-action-btn{
+  padding:6px 12px;
+  border:none;
+  background:var(--primary);
+  color:#fff;
+  border-radius:12px;
+  cursor:pointer;
+  transition:0.2s;
+  font-size:13px;
+}
+.order-action-btn:disabled{
+  background: #ccc;
+  cursor: not-allowed;
+}
+.order-action-btn:hover:not(:disabled){ background:var(--secondary); }
+
+/* Highlight for matched order */
+.order-item.highlight { 
+  border: 2px solid var(--primary);
+  box-shadow: 0 6px 16px rgba(255,89,0,0.2);
+}
+
+/* Bottom Navigation */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;}
+.bottom-nav div{text-align:center;font-size:12px;color:#666;cursor:pointer;display:flex;flex-direction:column;align-items:center;}
+.bottom-nav .material-icons-outlined{font-size:20px;margin-bottom:2px;}
+.bottom-nav .active{color:var(--primary);font-weight:600;}
+.bottom-nav .active .material-icons-outlined{color:var(--primary);}
+
+/* No orders */
+.no-orders{ text-align:center; margin-top:40px; color:#999;}
+.no-orders img{ width:150px; opacity:0.6; margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="material-icons-outlined back-btn" onclick="goBack()">arrow_back</span>
+  <div class="logo"><h1>Orders</h1></div>
+</header>
+
+<!-- Search Bar -->
+<div class="search-container">
+  <span class="material-icons-outlined">search</span>
+  <input type="text" id="searchInput" placeholder="Search by Order ID, Buyer ID or Product name...">
+</div>
+
+<div class="orders-container" id="ordersContainer">
+  <p style="text-align:center;margin-top:20px;">Loading orders...</p>
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-profile"><span class="material-icons-outlined">person</span>Profile</div>
+  <div class="nav-products"><span class="material-icons-outlined">inventory_2</span>Products</div>
+  <div class="nav-orders"><span class="material-icons-outlined">shopping_bag</span>Orders</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBuGBZ9wJ2i29fIR2YjtUHqAqa58hkKXug",
+  authDomain: "mystockbd-2562f.firebaseapp.com",
+  projectId: "mystockbd-2562f",
+  storageBucket: "mystockbd-2562f.appspot.com",
+  messagingSenderId: "502104908886",
+  appId: "1:502104908886:web:ec887afe724c0f1a2f87f7"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function goBack(){ window.history.back(); }
+
+const ordersContainer = document.getElementById('ordersContainer');
+const statusButtons = ['Processing', 'Delivered', 'Cancelled'];
+
+// Render items function
+function renderItems(items, storeId){
+  return items.map(it => 
+    `<p>
+      <img src="${it.mainImage}" onclick="goToProduct('${storeId}','${it.id}')" alt="${it.name}">
+      <strong onclick="goToProduct('${storeId}','${it.id}')">${it.name}</strong> - ৳${it.price} × ${it.qty}
+    </p>`).join('');
+}
+
+// Auth listener
+auth.onAuthStateChanged(async user => {
+  if(!user){ window.location.href='login.html'; return; }
+
+  const sellerDoc = await db.collection('sellers').doc(user.uid).get();
+  if(!sellerDoc.exists){
+    ordersContainer.innerHTML = "<p class='no-orders'>Seller তথ্য পাওয়া যায়নি!</p>";
+    return;
+  }
+
+  db.collection('sellers').doc(user.uid).collection('orders')
+    .orderBy('createdAt','desc')
+    .onSnapshot(snapshot => {
+      if(snapshot.empty){
+        ordersContainer.innerHTML = `
+          <div class="no-orders">
+            <img src="https://i.postimg.cc/3rL3q8cD/Screenshot-2025-09-24-121738-removebg-preview.png" alt="No orders">
+            <p>কোনো অর্ডার নেই।</p>
+          </div>`;
+        return;
+      }
+
+      ordersContainer.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.classList.add('order-item');
+
+        const createdAt = data.createdAt ? data.createdAt.toDate() : null;
+        const createdAtStr = createdAt ? createdAt.toLocaleString('bn-BD', {
+          year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        }) : 'Not available';
+
+        div.innerHTML = `
+          <div class="order-id">অর্ডার #${doc.id}</div>
+          <h3>Order by: ${data.userName}</h3>
+          <p><strong>Buyer ID:</strong> ${data.userId}</p>
+          ${renderItems(data.items, data.storeId)}
+          <p><strong>Total:</strong> ৳${data.totalPrice}</p>
+          <p><strong>Phone:</strong> ${data.phone}</p>
+          <p><strong>Address:</strong> ${data.division}, ${data.district}, ${data.upazila}, ${data.postal}</p>
+          <p><strong>Order Date:</strong> ${createdAtStr}</p>
+          <p class="status"><strong>Status:</strong> ${data.status || 'Pending'}</p>
+          <div class="status-buttons"></div>
+        `;
+        ordersContainer.appendChild(div);
+
+        const statusDiv = div.querySelector('.status-buttons');
+        statusButtons.forEach(status => {
+          const btn = document.createElement('button');
+          btn.classList.add('order-action-btn');
+          btn.innerText = status;
+
+          if(data.status === 'Cancelled' || data.status === 'Delivered') btn.disabled = true;
+          else if(data.status === 'Pending' && status === 'Delivered') btn.style.display = 'none';
+          else if(data.status === 'Processing' && status === 'Cancelled') btn.disabled = true;
+
+          btn.addEventListener('click', async () => {
+            if(btn.disabled) return;
+            if(!confirm(`আপনি কি অর্ডারটি "${status}" করতে চান?`)) return;
+
+            try {
+              btn.disabled = true;
+              btn.innerText = 'Updating...';
+
+              await db.collection('sellers').doc(user.uid).collection('orders').doc(doc.id)
+                .update({ status });
+
+              if(data.userId){
+                const buyerOrderRef = db.collection('users').doc(data.userId).collection('orders').doc(doc.id);
+                await buyerOrderRef.update({ status });
+              }
+
+              div.querySelector('.status').innerHTML = `<strong>Status:</strong> ${status}`;
+              Array.from(statusDiv.children).forEach(b=>{
+                if(status === 'Cancelled' || status === 'Delivered') b.disabled = true;
+                else if(status === 'Pending' && b.innerText === 'Delivered') b.style.display = 'none';
+                else if(status === 'Processing' && b.innerText === 'Cancelled') b.disabled = true;
+                else { b.disabled = false; b.style.display = 'inline-block'; }
+              });
+
+              alert(`✅ Status update হয়েছে: ${status}`);
+              data.status = status;
+            } catch(err){
+              console.error(err);
+              alert("❌ Status update করতে সমস্যা হয়েছে: " + err.message);
+            } finally {
+              if(!btn.disabled) btn.innerText = status;
+            }
+          });
+          statusDiv.appendChild(btn);
+        });
+      });
+    });
+});
+
+// Go to product
+function goToProduct(storeId, productId){
+  firebase.firestore().collection('stores').doc(storeId).collection('products').doc(productId).get()
+    .then(doc => {
+      if(doc.exists){
+        const product = doc.data();
+        localStorage.setItem('selectedProduct', JSON.stringify({
+          storeId, productId, title: product.title, price: product.price, mainImage: product.mainImage, description: product.description||''
+        }));
+        window.location.href = 'product.html';
+      } else { alert('Product data not found!'); }
+    });
+}
+
+// Bottom nav
+document.querySelector(".nav-profile").addEventListener("click", ()=> window.location.href="profile.html");
+document.querySelector(".nav-products").addEventListener("click", ()=> window.location.href="my-product.html");
+document.querySelector(".nav-orders").classList.add("active");
+
+// Search functionality
+const searchInput = document.getElementById("searchInput");
+searchInput.addEventListener("input", () => {
+  const query = searchInput.value.toLowerCase().trim();
+  const orderItems = document.querySelectorAll(".order-item");
+
+  orderItems.forEach(item => {
+    const orderId = item.querySelector('.order-id')?.textContent.toLowerCase() || '';
+    const buyerId = item.querySelector('p strong')?.textContent.toLowerCase() || '';
+    const buyerName = item.querySelector('h3')?.textContent.toLowerCase() || '';
+    const productNames = Array.from(item.querySelectorAll('p strong'))
+                              .map(s=>s.textContent.toLowerCase()).join(' ');
+
+    if(query === '') {
+      item.style.display = 'block';
+      item.classList.remove('highlight');
+    } else if(orderId.includes(query) || buyerId.includes(query) || productNames.includes(query) || buyerName.includes(query)) {
+      item.style.display = 'block';
+      item.classList.add('highlight');
+    } else {
+      item.style.display = 'none';
+      item.classList.remove('highlight');
+    }
+  });
+});
+
+</script>
+</body>
+</html>
